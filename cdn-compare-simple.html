@@ -281,7 +281,7 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .ct-row>span{white-space:nowrap;}
 .ct-row.sel-row{background:#f5f9ff;}
 .ct-row.blend-row{background:#eef6f0; font-weight:500;}
-.ct-title{font-size:22px; color:#0b0f19; margin-bottom:4px;}
+.ct-title{font-size:22px; color:#0b0f19; margin-bottom:16px;}
 .tbl-toggle{background:none; border:none; color:var(--accent); font-size:13px; cursor:pointer; font-family:inherit; font-weight:600; text-decoration:underline; padding:10px 0 0;}
 
 /* profile */
@@ -1251,7 +1251,6 @@ function render(){
   document.getElementById("tableArea").innerHTML=`
     <div>
       <h2 class="ct-title">Comparison Table</h2>
-      <div class="sec-sub">Every CDN on ${fmtDate(dateKey())}, ${S.scope==="Global"?"all regions":S.scope==="US"?"United States":"Europe"} · performance bands: 0–30ms Excellent, 30–60ms Good, 60–90ms Fair, 90ms+ Slow · RUM uptime = share of real-user samples answered successfully</div>
       ${comparisonTableHTML()}
     </div>`;
   renderProfile();
