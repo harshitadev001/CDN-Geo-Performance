@@ -7,105 +7,166 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Rubik:wght@400;500;600&family=Poppins:wght@600;700&display=swap');
 :root{
-  --dark:#0b2545; --accent:#1f6feb; --grey:#595959; --light:#eef4fb;
+  --dark:#0b2545; --accent:#1f6feb; --brand-blue:#0065FF; --grey:#595959; --light:#eef4fb;
   --border:#dde6f0; --bg:#f7fafd; --good:#1a7f37;
   --ink:#1c2b3a; --ink2:#595959;
   --rel-good:#2f9e44; --rel-mid:#e8b33a; --rel-bad:#d64545;
+  /* rail width + column gap drive both the main grid and the timeline's right edge,
+     so the timeline lines up with the map card instead of the page margin */
+  --rail-w:clamp(250px,17%,320px); --col-gap:20px; --fb-gap:14px;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 body{font-family:'Rubik','Segoe UI',system-ui,-apple-system,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:14px;}
 h1,h2,h3,.big,.pf-stat .v,.tm-head{font-family:'Rajdhani','Segoe UI',system-ui,sans-serif; letter-spacing:.01em;}
 /* one gutter for the whole page: top nav, header, filter bar, main, footer */
-.wrap{max-width:none; margin:0 auto; padding:0 15rem;}
+.wrap{max-width:none; margin:0 auto; padding:0 5.5%;}
 
 /* brand topbar */
-.topbar{background:#01072C; height:72px;}
+.topbar{background:#fff; height:88px; border-bottom:1px solid var(--border);}
 .topbar .wrap{display:flex; align-items:center; height:100%;}
-.brand{display:flex; align-items:center; gap:11px; text-decoration:none;}
-.brand-name{font-family:'Poppins','Rubik',sans-serif; font-weight:600; font-size:20px; color:#fff; letter-spacing:.03em;}
+.brand{display:flex; align-items:center; gap:14px; text-decoration:none;}
+.brand img{width:50px; height:50px; display:block;}
+.brand-txt{display:block;}
+.brand-name{display:block; font-family:'Poppins','Rubik',sans-serif; font-weight:500; font-size:25px; color:#0b0f19; letter-spacing:-.01em; line-height:1.15;}
+.brand-name b{font-weight:700;}
+.brand-sub{display:block; font-size:12px; color:#98a2b3; margin-top:1px;}
 
-header.site{background:#fff; border-bottom:1px solid var(--border); padding:20px 0;}
-h1{font-size:26px; color:var(--dark);}
-.subtitle{color:var(--grey); margin-top:2px; font-size:14px;}
+header.site{background:transparent; border-bottom:none; padding:26px 0 0;}
+h1{font-size:28px; color:#0b0f19;}
+.subtitle{color:var(--grey); margin-top:4px; font-size:14px;}
 
-/* filters across the top, then map | multi-CDN rail */
-.filterbar{background:#fff; border-bottom:1px solid var(--border); padding:12px 0;}
-.fbar{display:flex; align-items:flex-end; gap:26px; flex-wrap:wrap;}
-.fitem{display:flex; flex-direction:column; gap:6px;}
-.fitem .fg-label{margin-bottom:0;}
-.fitem .fg-label b{color:var(--dark); font-family:'Rajdhani',sans-serif; font-size:14px; letter-spacing:0; margin-left:4px;}
-.tl-item{flex:1 1 260px; max-width:420px; min-width:220px;}
+/* horizontal filter bar under the page title */
+.filterbar{display:flex; align-items:flex-start; gap:var(--fb-gap); flex-wrap:wrap; padding:20px 0 4.5px;}
+.dd{position:relative;}
+.dd>summary{list-style:none; cursor:pointer; user-select:none; display:flex; align-items:center; gap:12px;
+  background:#fff; border:1px solid var(--border); border-radius:6px; padding:12px 16px;
+  font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:12px; font-weight:500; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ink); white-space:nowrap;}
+.dd>summary::-webkit-details-marker{display:none;}
+.dd>summary:hover{border-color:#96C0FF; color:var(--brand-blue);}
+/* open: the trigger picks up the brand blue and a soft blue outline */
+.dd[open]>summary{border-color:#96C0FF; color:var(--brand-blue); font-weight:700;}
+.dd>summary::after{content:""; width:13px; height:13px; margin-left:auto; flex:0 0 auto; background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/13px 13px no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/13px 13px no-repeat;
+  transition:transform .15s;}
+.dd[open]>summary::after{transform:rotate(180deg);}
+.dd-body{position:absolute; z-index:40; top:calc(100% + 10px); left:0; min-width:210px; background:#fff;
+  border:none; border-radius:12px; box-shadow:0 12px 30px rgba(16,32,54,.16); padding:8px;}
+/* the little caret that ties the menu back to its trigger */
+.dd-body::before{content:""; position:absolute; top:-7px; left:22px; width:16px; height:16px;
+  background:#fff; border-radius:3px; transform:rotate(45deg);}
+.dd-wide{min-width:330px; padding:18px 20px 14px;}
+.dd-opt{position:relative; display:block; width:100%; text-align:left; border:none; background:none;
+  font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:14px; font-weight:400;
+  color:var(--ink); padding:10px 12px; border-radius:8px; cursor:pointer;}
+.dd-opt:hover{background:#F2F7FF;}
+.dd-opt.on{background:#E6F0FF; color:var(--brand-blue);}
+
 .hseg{display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
 .hseg button{border:none; background:#fff; padding:7px 16px; cursor:pointer; font-size:13px; font-family:inherit; color:var(--grey); border-right:1px solid var(--border);}
 .hseg button:last-child{border-right:none;}
 .hseg button.on{background:var(--accent); color:#fff; font-weight:600;}
+/* full-width segmented control (sidebar + rail mode toggle) */
+.seg-full{display:flex; width:100%;}
+.seg-full button{flex:1; padding:6px 6px; font-size:12.5px; text-align:center;}
 .vseg{display:flex; flex-direction:column; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
 .vseg button{border:none; background:#fff; padding:8px 12px; cursor:pointer; font-size:13px; font-family:inherit; color:var(--grey); border-bottom:1px solid var(--border); text-align:left;}
 .vseg button:last-child{border-bottom:none;}
 .vseg button.on{background:var(--accent); color:#fff; font-weight:600;}
 .layout{
   display:grid;
-  grid-template-columns:220px 1fr 300px;
-  gap:16px;
-  align-items:start;
-  padding-top:18px;
-  padding-left:15rem;
-  padding-right:15rem;
+  grid-template-columns:1fr var(--rail-w);
+  gap:0 var(--col-gap);
+  align-items:stretch;
+  padding-top:0;
+  padding-bottom:24px;
+  padding-left:5.5%;
+  padding-right:5.5%;
 }
-/* the rail can grow taller than the viewport (12 CDN chips + advanced filters),
-   so it scrolls inside itself instead of hiding what sits below the fold */
-.side{position:sticky; top:14px; max-height:calc(100vh - 28px); overflow-y:auto; padding-right:2px;}
-/* filters don't get long enough to need their own scroll — let them expand freely */
-#filters{max-height:none; overflow-y:visible; padding-right:0;}
+/* row 1: filter bar. row 2: map card. the rail spans both, so its card's top edge
+   lines up with the filter row and its bottom with the map card — as in the design.
+   row 3: profile + comparison table, under the map column only */
+.layout>.filterbar{grid-column:1; grid-row:1; min-width:0;}
+#content{grid-column:1; grid-row:2; min-width:0;}
+#rail{grid-column:2; grid-row:1/span 3;}
+#below{grid-column:1; grid-row:3; min-width:0; margin-top:24px;}
+#content .mapcard{margin-bottom:0; position:relative;}
+/* the rail matches the map card's height, and sticks in place while the page scrolls
+   past it, so the CDN list stays reachable next to the table */
+#rail{position:relative; min-height:0;}
+.side>.fgroup{position:sticky; top:16px; height:auto; max-height:calc(100vh - 32px);
+  min-height:0; display:flex; flex-direction:column; margin-bottom:0; padding:14px 12px 10px;}
+/* the list still scrolls, it just doesn't show a scrollbar */
+.side .chips{overflow-y:auto; min-height:0; flex:0 1 auto; scrollbar-width:none; -ms-overflow-style:none;}
+.side .chips::-webkit-scrollbar{width:0; height:0; display:none;}
 .side::-webkit-scrollbar{width:6px;}
 .side::-webkit-scrollbar-thumb{background:#cfdae6; border-radius:3px;}
-.fgroup{background:#fff; border:1px solid var(--border); border-radius:12px; padding:13px 14px; margin-bottom:12px;}
+.fgroup{background:#fff; border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:10px;}
 .fg-label{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--grey); font-weight:700; margin-bottom:9px;}
 .fg-note{font-size:11.5px; color:var(--grey); margin-top:8px; line-height:1.4;}
-.pick-hint{font-size:12px; color:var(--grey); margin-top:10px; line-height:1.4;}
 
-/* timeline */
-.tl-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
-.playbtn{background:var(--accent); color:#fff; border:none; border-radius:7px; width:26px; height:26px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
-.playbtn:hover{background:#155ac9;}
-.playbtn.on{background:var(--dark);}
-input.tlrange{width:100%; accent-color:var(--accent); margin:0;}
-.tl-ends{display:flex; justify-content:space-between; font-size:10.5px; color:var(--grey);}
+/* timeline — sits at the right end of the filter bar, since the date drives the whole UI */
+.playbtn{background:none; color:var(--accent); border:none; padding:0; width:20px; height:20px; cursor:pointer; line-height:0; display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+.playbtn img{width:20px; height:20px; display:block;}
+.playbtn:hover{opacity:.75;}
+/* playing: the same button becomes a stop control */
+.playbtn.on img{display:none;}
+.playbtn.on::before{content:""; width:12px; height:12px; border-radius:2px; background:var(--dark);}
+input.tlrange{width:100%; accent-color:var(--accent); margin:0; height:18px; cursor:pointer;}
+/* the slider's right edge lands exactly on the map card's edge */
+.tlbar{margin-left:auto; margin-right:0; min-width:250px; flex:0 1 330px;}
+.tlbar .tl-top{display:flex; align-items:center; gap:9px; margin-bottom:6px;}
+.tlbar .tl-span,.tlbar .tl-lab{font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:12px; font-weight:400;
+  letter-spacing:.04em; text-transform:uppercase; color:var(--ink); white-space:nowrap;}
+/* the covered range on the left, the window's name on the right, next to play */
+.tlbar .tl-lab{margin-left:auto;}
 
-/* advanced — sits in the top filter bar, next to the date filter */
-details.adv{padding:0; overflow:visible; position:relative; border:1px solid var(--border);
-  border-radius:8px; background:#fff; margin:0;}
-details.adv summary{list-style:none; cursor:pointer; font-size:13px; color:var(--dark); font-weight:600;
-  display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:7px; background:#fff; user-select:none;}
-details.adv summary:hover{background:#f2f7ff; color:var(--accent);}
-details.adv summary::-webkit-details-marker{display:none;}
-details.adv summary::before{content:"⚙"; font-size:14px;}
-details.adv summary::after{content:""; width:14px; height:14px; margin-left:6px; flex:0 0 auto;
-  background:var(--grey);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/14px 14px no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/14px 14px no-repeat;
-  transition:transform .15s;}
-details.adv[open] summary{color:var(--accent);}
-details.adv[open] summary::after{transform:rotate(90deg); background:var(--accent);}
-/* the panel opens inline, pushing the content below it down — no clipped/floating overlay */
-details.adv .advbody{padding:13px 14px 3px; border-top:1px solid var(--border);}
-.chk{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink); cursor:pointer; margin-bottom:10px;}
-.thrRow{font-size:12px; color:var(--ink2); margin-bottom:8px;}
-.thrRow b{color:var(--ink);}
-.thrRow input[type=range]{width:100%; margin-top:2px; accent-color:var(--accent);}
+/* advanced latency thresholds — live inside the "Filters" dropdown on the top bar */
+.chk{display:flex; align-items:center; gap:10px; font-family:'Rubik','Segoe UI',system-ui,sans-serif;
+  font-size:15px; font-weight:400; color:var(--ink2); cursor:pointer; margin-bottom:18px;}
+.chk input{width:18px; height:18px; margin:0; accent-color:var(--brand-blue); cursor:pointer;}
+.thrRow{margin-bottom:16px;}
+.thrRow:last-child{margin-bottom:6px;}
+/* label + dot on the left, the value on the right, slider underneath */
+.thr-top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;
+  font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:15px; font-weight:400; color:var(--ink2);}
+.thr-k{display:flex; align-items:center; gap:9px;}
+.thr-k i{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+.thrRow b{font-weight:400; color:var(--ink2);}
+.thrRow input[type=range]{width:100%; margin:0; height:8px; accent-color:var(--brand-blue); cursor:pointer;}
 
 /* CDN rail */
-.chips{display:flex; flex-direction:column; gap:7px;}
-.chip{border:1.5px solid var(--border); background:#fff; border-radius:9px; padding:8px 12px; cursor:pointer; font-size:13.5px; font-family:inherit; color:var(--ink); display:flex; align-items:center; gap:8px; transition:border-color .12s; width:100%; text-align:left;}
-.chip:hover{border-color:var(--accent);}
+.chips{display:flex; flex-direction:column; gap:2px;}
+.chip{border:1.5px solid transparent; background:#fff; border-radius:10px; padding:7px 8px; cursor:pointer; font-size:14px; font-family:inherit; color:var(--ink); display:flex; align-items:center; gap:13px; transition:background .12s, border-color .12s; width:100%; text-align:left;}
+.chip:hover{background:#f4f8ff;}
+.chip .logo{width:32px; height:32px; border-radius:4px; display:block; flex:0 0 auto;}
+.chip .logo-fb{width:32px; height:32px; border-radius:4px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px;}
 .chip .dot{width:10px; height:10px; border-radius:50%; background:#c9d4e0; flex:0 0 auto;}
-.chip.on{border-color:var(--accent); background:#f5f9ff; font-weight:600;}
-.chip.on .dot{background:var(--accent);}
+.chip.on{border-color:transparent; background:#f2f7ff; font-weight:600;}
 .chip .cms{margin-left:auto; font-size:11.5px; color:var(--grey); font-weight:500;}
 .chip.on .cms{color:var(--accent);}
-.best-chip{width:100%;}
-.best-chip.on{border-color:var(--accent); color:var(--accent);}
-.rail-div{border-top:1px solid var(--border); margin:11px 0 2px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--grey); font-weight:700; padding-top:10px;}
+/* best-CDN-per-region reads as a radio option, now the first row inside the CDN rail list */
+/* it reads as the first entry of the CDN list, matching the other rows' metrics */
+.best-chip{width:100%; flex:0 0 auto; background:#fff; border:1.5px solid transparent; border-radius:10px;
+  padding:7px 8px; margin:0 0 2px; font-family:'Rubik','Segoe UI',system-ui,sans-serif;
+  font-size:14px; font-weight:500; gap:13px;}
+.best-chip:hover{background:#f4f8ff;}
+/* radio glyph is Assets/radio icon.svg itself (an <img>, so it also renders when the
+   page is opened straight off disk), greyed out while the option is not selected */
+.best-chip .radio{width:22px; height:22px; display:block; flex:0 0 auto; margin:5px;}
+.best-chip:not(.on) .radio{filter:grayscale(1) opacity(.55);}
+.best-chip.on{color:var(--brand-blue); background:#E6F0FF; font-weight:500;}
+.rail-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:20px;}
+.rail-head .rail-div{font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:14px; color:var(--ink); font-weight:400;}
+/* multi-CDN / single-CDN mode switch — Assets/toggle icon.svg, 32x18 */
+.switch{position:relative; width:32px; height:18px; flex:0 0 auto; cursor:pointer; display:block;}
+.switch input{position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:2;}
+.switch .track{position:absolute; inset:0; border-radius:9px;
+  background:url("Assets/toggle%20icon.svg") center/32px 18px no-repeat;}
+.switch .knob{display:none; position:absolute; top:2px; left:16px; width:14px; height:14px; border-radius:50%; background:#fff;}
+.switch input:checked~.track{background:var(--brand-blue);}
+.switch input:checked~.knob{display:block;}
 
 /* blend score box */
 .blend{background:linear-gradient(180deg,#f4f9f5,#eef6f0); border:1px solid #d5e8db; border-radius:10px; padding:11px 12px; margin-bottom:11px;}
@@ -127,15 +188,21 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .sec-head{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
 .sec-sub{font-size:12.5px; color:var(--grey); margin-bottom:12px;}
 .view-seg{margin-left:auto;}
-.legend{display:flex; flex-wrap:wrap; gap:6px 16px; margin-bottom:12px; font-size:12.5px; color:var(--ink2);}
-.leg-item{display:flex; align-items:center; gap:6px;}
-.leg-item .dot{width:10px; height:10px; border-radius:50%;}
+/* compact grid so 12 CDN entries stay to two short rows instead of eating the map */
+.legend{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:4px 12px; margin-bottom:10px; font-size:11.5px; color:var(--ink2);}
+.leg-item{display:flex; align-items:center; gap:5px; white-space:nowrap;}
+.leg-item .dot{width:8px; height:8px; border-radius:50%; flex:0 0 auto;}
 
 /* map */
 .mapwrap{overflow-x:auto;}
 /* fixed frame so the card keeps one height across Global / US / Europe */
-.mapfixed{height:460px; display:flex; align-items:center; justify-content:center; overflow:hidden;}
-.mapfixed #mapsvg{height:100%; width:100%;}
+/* the latency scale overlays the map's empty southern band, so the frame can take
+   the card's full height instead of reserving a strip under it */
+/* the map stretches to fill the frame on both axes — the scale sits under it, in flow.
+   the frame carries the map's own aspect (set from the fitted viewBox at render time),
+   so the map fills it on both axes without being stretched out of shape */
+.mapfixed{position:relative; margin-top:12px; width:100%; height:620px; display:flex; align-items:stretch; overflow:hidden;}
+.mapfixed #mapsvg{height:100%; width:100%; display:block; flex:1 1 auto;}
 #mapsvg{width:100%; height:auto; display:block;}
 .pfmap{width:100%; height:auto; display:block;}
 .geopath{stroke:#fff; stroke-width:.7; vector-effect:non-scaling-stroke; cursor:pointer;}
@@ -143,8 +210,12 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .bgland{fill:#e3eaf2; stroke:#fff; stroke-width:.4; vector-effect:non-scaling-stroke; pointer-events:none;}
 .nodata{fill:#e3eaf2; stroke:#fff; stroke-width:.4; vector-effect:non-scaling-stroke;}
 
-/* horizontal red-yellow-green scale under the map */
-.relscale{margin-top:14px; padding-top:14px; border-top:1px solid var(--light);}
+/* horizontal red-yellow-green scale — floats over the map's bottom edge, just above
+   Antarctica, so it reads with the map instead of taking a band of its own */
+/* the scale floats over the map's southern band — it sits on top of Antarctica,
+   which carries no data, instead of taking a strip of its own under the map */
+.relscale{position:absolute; left:0; right:0; bottom:24px; margin:0; padding:12px 24px 14px;
+  background:#fff; border-top:none; pointer-events:none;}
 .rs-title{font-size:12px; color:var(--ink2); font-weight:600; line-height:1.45; margin-bottom:9px;}
 .rs-body{width:100%;}
 .rs-bar{height:14px; border-radius:7px;}
@@ -152,6 +223,9 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .rs-ticks span{line-height:1; white-space:nowrap;}
 .rs-ticks span:first-child{margin-left:-2px;}
 .rs-ticks span:last-child{margin-right:-2px;}
+/* four bands: each label sits under the middle of its own quarter */
+.rs-ticks-4{justify-content:flex-start;}
+.rs-ticks-4 span{flex:1 1 25%; margin:0; text-align:center;}
 .rs-ticks b{color:var(--ink); font-weight:600;}
 
 /* compact CDN chips inside the map frame */
@@ -164,38 +238,47 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .mini .dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto;}
 .mini-badge{background:var(--good); color:#fff; font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:8px; letter-spacing:.04em;}
 
-/* map annotation tooltip */
-.tooltip{position:fixed; pointer-events:none; background:#3c3c3c; color:#fff; padding:12px 15px; border-radius:8px; font-size:14px; z-index:50; display:none; box-shadow:0 6px 20px rgba(0,0,0,.3); line-height:1.55; max-width:280px;}
-.tooltip .tt-t{font-weight:600; font-size:16px; margin-bottom:3px;}
-.tooltip .row{display:flex; align-items:center; gap:7px;}
-.tooltip .row .ms{margin-left:auto; font-weight:600; padding-left:10px;}
-.tooltip .dot{width:9px; height:9px; border-radius:50%; display:inline-block; flex:0 0 auto;}
-.tooltip .tt-sep{border-top:1px solid rgba(255,255,255,.22); margin:7px 0 5px;}
-.tooltip .tt-you{font-size:13px;}
+/* map annotation tooltip — white card, one row per CDN, value right-aligned */
+.tooltip{position:fixed; pointer-events:none; z-index:50; display:none; box-sizing:border-box;
+  width:212px; padding:8px; background:#fff; border:1px solid #D3E1FE; border-radius:4px;
+  box-shadow:0 4px 16px rgba(1,7,44,.2); font-family:'Rubik','Segoe UI',system-ui,sans-serif;}
+.tooltip .tt-in{display:flex; flex-direction:column; gap:8px; width:100%;}
+.tooltip .tt-head{display:flex; align-items:center; gap:16px;}
+.tooltip .tt-t{flex:1 1 auto; min-width:0; font-size:14px; font-weight:600; line-height:17px;
+  letter-spacing:.04em; color:#2B3642; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.tooltip .tt-rule{flex:0 1 100px; height:0; border-top:1px solid #C6C6C6; opacity:.2;}
+.tooltip .tt-rows{display:flex; flex-direction:column; gap:8px;}
+.tooltip .tt-row{display:flex; align-items:center; gap:12px;}
+.tooltip .tt-k{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:4px;
+  font-size:12px; line-height:140%; letter-spacing:-.02em; color:#5A697A;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.tooltip .tt-dot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
+.tooltip .tt-v{flex:0 0 auto; font-size:12px; line-height:12px; letter-spacing:.04em; color:#000; text-align:right;}
+.tooltip .tt-v.diff{color:#D13333;}
+.tooltip .tt-v.par{color:var(--rel-good);}
+.tooltip .tt-note{font-size:11px; line-height:1.35; letter-spacing:-.02em; color:#8b98a8;}
 
-/* comparison table */
-table.data{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:4px;}
-table.data th{background:var(--dark); color:#fff; padding:8px 9px; text-align:left; white-space:nowrap; font-weight:600;}
-table.data th.num{text-align:right;}
-table.data td{padding:7px 9px; border-bottom:1px solid var(--border); white-space:nowrap;}
-table.data td.num{text-align:right; font-variant-numeric:tabular-nums;}
-table.data tr.sel-row{background:#f5f9ff;}
-table.data tr.blend-row{background:#eef6f0; font-weight:600;}
-table.data tr.blend-row td{border-bottom:2px solid #cfe3d6;}
-table.data td.gap{font-weight:600;}
-.cdn-cell{display:flex; align-items:center; gap:7px;}
-.cdn-cell .dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
-.tblwrap{max-height:520px; overflow:auto; border:1px solid var(--border); border-radius:8px;}
-.gapchip{display:inline-block; min-width:52px; text-align:center; padding:2px 7px; border-radius:9px; color:#fff; font-weight:600; font-size:11.5px;}
-/* performance column: band + how much of the fastest CDN's pace it holds */
-.perf{display:flex; align-items:center; gap:9px;}
-.perf-bar{flex:0 0 70px; height:8px; border-radius:4px; background:#e7edf3; overflow:hidden;}
-.perf-bar span{display:block; height:100%; border-radius:4px;}
-.perf-lab{font-weight:600; font-size:12.5px;}
-.perf-gap{color:var(--grey); font-size:11.5px; margin-left:2px;}
-/* the VCDN toggle carries the IO River blue */
-.vcdn-toggle{color:var(--accent); font-weight:600;}
-.vcdn-toggle input{accent-color:#0065FF;}
+/* comparison table — flat card, one grid row per CDN */
+.ctable{box-sizing:border-box; display:flex; flex-direction:column; align-items:stretch;
+  background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden;}
+.ct-row{display:grid; grid-template-columns:194px 194px 1fr 1fr; column-gap:60px; align-items:center;
+  padding:12px 32px; font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:16px; font-weight:400;
+  line-height:140%; letter-spacing:-.02em; color:#1D252F; border-top:1px solid #F0F3F8;}
+.ct-head{display:grid; grid-template-columns:194px 194px 1fr 1fr; column-gap:60px; align-items:center;
+  padding:12px 32px; background:#E8EBFC; border-top:none;
+  font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:16px; font-weight:400;
+  line-height:140%; letter-spacing:-.02em; color:#1D252F;}
+.ct-row:first-of-type{border-top:none;}
+.ct-cdn{display:flex; align-items:center; gap:12px; font-size:14px; line-height:140%; color:#000;}
+.ct-cdn .logo,.ct-cdn .logo-fb{width:32px; height:32px; border-radius:4px; flex:0 0 auto;}
+/* performance is a band pill, not a bar — same 30/60/90ms cutoffs as before */
+.ct-pill{box-sizing:border-box; display:flex; justify-content:center; align-items:center; padding:4px;
+  width:100px; height:24px; border-radius:4px; font-size:12px; font-weight:500; line-height:16px;
+  letter-spacing:.3px; text-transform:uppercase;}
+.ct-row>span{white-space:nowrap;}
+.ct-row.sel-row{background:#f5f9ff;}
+.ct-row.blend-row{background:#eef6f0; font-weight:500;}
+.ct-title{font-size:22px; color:#0b0f19; margin-bottom:4px;}
 .tbl-toggle{background:none; border:none; color:var(--accent); font-size:13px; cursor:pointer; font-family:inherit; font-weight:600; text-decoration:underline; padding:10px 0 0;}
 
 /* profile */
@@ -213,20 +296,18 @@ table.data td.gap{font-weight:600;}
 .gradbar .g{width:140px; height:10px; border-radius:5px;}
 .note{font-size:12px; color:var(--grey); line-height:1.5;}
 
-footer.site{border-top:1px solid var(--border); background:#fff; padding:16px 0; color:var(--grey); font-size:12.5px; line-height:1.5;}
-/* the 15rem gutter has to shrink before it eats the content */
-@media (max-width:1600px){
-  .wrap{padding:0 8rem;}
-  .layout{padding-left:8rem; padding-right:8rem;}
-}
-@media (max-width:1200px){
-  .wrap{padding:0 3rem;}
-  .layout{padding-left:3rem; padding-right:3rem;}
-}
+footer.site{border-top:none; background:transparent; padding:0 0 24px; color:var(--grey); font-size:12.5px; line-height:1.5;}
 @media (max-width:1000px){
   .wrap{padding:0 20px;}
   .layout{grid-template-columns:1fr; padding-left:20px; padding-right:20px;}
-  .side{position:static; max-height:none;}
+  .layout>.filterbar,#content,#rail,#below{grid-column:1; grid-row:auto;}
+  #content .mapcard{margin-bottom:18px;}
+  .tlbar{margin-left:0; margin-right:0; flex:1 1 100%;}
+  .best-chip{width:100%; flex:1 1 100%;}
+  .side{max-height:none;}
+  #rail{position:static;}
+  .side>.fgroup{position:static;}
+  .side .chips{overflow:visible; max-height:none;}
   .chips{flex-direction:row; flex-wrap:wrap;}
   .chip{width:auto;}
 }
@@ -236,55 +317,74 @@ footer.site{border-top:1px solid var(--border); background:#fff; padding:16px 0;
 
 <div class="topbar"><div class="wrap">
   <a class="brand" href="https://www.ioriver.io" target="_blank" rel="noopener">
-    <span class="brand-name">IO RIVER</span>
+    <img src="Assets/Logos/Top%20logo.svg" alt="" width="50" height="50">
+    <span class="brand-txt">
+      <span class="brand-name">CDN <b>Hub.</b></span>
+      <span class="brand-sub">Powered By IO River</span>
+    </span>
   </a>
 </div></div>
 
 <header class="site"><div class="wrap">
-  <h1>CDN Compare</h1>
-  <div class="subtitle">Build your Multi-CDN and see how close it gets to the fastest CDN in every location</div>
+  <h1>Compare CDNs</h1>
+  <div class="subtitle">Find the fastest and most reliable CDN around the world</div>
 </div></header>
 
 <main class="wrap layout">
-  <aside class="side" id="filters">
-    <div class="fgroup"><div class="fg-label">Benchmark by region</div><div class="vseg" id="segScope"></div></div>
-    <div class="fgroup"><div class="fg-label">Object size</div><div class="vseg" id="segObj"></div></div>
-    <div class="fgroup">
-      <div class="tl-head">
-        <div class="fg-label" style="margin-bottom:0">Date <b class="tl-date" id="tlDate"></b></div>
-        <button class="playbtn" id="playBtn" title="Play the last 10 days">▶</button>
-      </div>
-      <input type="range" class="tlrange" id="tlRange" min="0" max="29" step="1">
-      <div class="tl-ends"><span id="tlFirst"></span><span id="tlLast"></span></div>
-    </div>
-    <details class="fgroup adv" id="advBox">
-      <summary>Advanced filters</summary>
-      <div class="advbody">
-        <div class="fg-label">Absolute latency thresholds</div>
+  <div class="filterbar">
+    <details class="dd" id="advBox">
+      <summary>Absolute Latency</summary>
+      <div class="dd-body dd-wide">
         <label class="chk"><input type="checkbox" id="absChk"> Color map by absolute latency</label>
-        <div class="thrRow"><span>Green max: <b id="thrGv"></b> ms</span><input type="range" id="thrG" min="5" max="50" step="1"></div>
-        <div class="thrRow"><span>Yellow max: <b id="thrYv"></b> ms</span><input type="range" id="thrY" min="20" max="150" step="5"></div>
-        <div class="thrRow"><span>Orange max: <b id="thrOv"></b> ms</span><input type="range" id="thrO" min="50" max="300" step="5"></div>
+        <div class="thrRow">
+          <div class="thr-top"><span class="thr-k"><i style="background:#2DA44E"></i>Green max</span><b id="thrGv"></b></div>
+          <input type="range" id="thrG" min="5" max="50" step="1">
+        </div>
+        <div class="thrRow">
+          <div class="thr-top"><span class="thr-k"><i style="background:#E8C33A"></i>Yellow max</span><b id="thrYv"></b></div>
+          <input type="range" id="thrY" min="20" max="150" step="5">
+        </div>
+        <div class="thrRow">
+          <div class="thr-top"><span class="thr-k"><i style="background:#D64545"></i>Red max</span><b id="thrOv"></b></div>
+          <input type="range" id="thrO" min="50" max="300" step="5">
+        </div>
       </div>
     </details>
-  </aside>
-  <div style="min-width:0">
-    <div id="content"></div>
-    <section id="profile"></section>
+    <details class="dd" id="ddScope"></details>
+    <details class="dd" id="ddObj"></details>
+
+    <div class="tlbar">
+      <div class="tl-top">
+        <span class="tl-span" id="tlSpan"></span>
+        <span class="tl-lab">Last 10 days</span>
+        <button class="playbtn" id="playBtn" title="Play the last 10 days"><img src="Assets/play%20icon.svg" alt="" width="20" height="20"></button>
+      </div>
+      <input type="range" class="tlrange" id="tlRange" min="0" max="29" step="1">
+    </div>
   </div>
+
+  <div id="content"></div>
   <aside class="side" id="rail">
     <div class="fgroup">
-      <button class="chip best-chip" id="bestChip"><span class="dot"></span>Best CDN per location</button>
-      <div class="rail-div">Compare CDNs or build your own multi CDN</div>
+      <div class="rail-head">
+        <span class="rail-div" id="railDiv">Build your own Multi-CDN</span>
+        <label class="switch" title="Multi-CDN / single CDN">
+          <input type="checkbox" id="modeSwitch"><span class="track"></span><span class="knob"></span>
+        </label>
+      </div>
+      <button class="chip best-chip" id="bestChip"><img class="radio" src="Assets/radio%20icon.svg" alt="" width="16" height="16">Best CDN per region</button>
       <div class="chips" id="chips"></div>
-      <div class="pick-hint" id="pickHint"></div>
     </div>
   </aside>
+  <div id="below">
+    <section id="profile"></section>
+    <div id="tableArea"></div>
+  </div>
 </main>
 
 <footer class="site"><div class="wrap">
-  Latency = median TTFB measured from real-user probes, refreshed daily. Prototype uses simulated data.
-  &nbsp;·&nbsp; <a href="cdn-performance-hub-prototype.html">Advanced hub view</a>
+  Data is measured using NS1 Pulsar RUM Community Data, based on P50 latency from same-day real-user
+  samples in each country or U.S. state, using small (43&nbsp;B) and large (130,098&nbsp;B) objects.
 </div></footer>
 
 <div class="tooltip" id="tooltip"></div>
@@ -309,6 +409,17 @@ const CDNS=[
  {n:"Tata",       m:{NA:1.15,SA:1.20,EU:1.05,ME:.90,AF:.90,AS:.75,OC:1.05}}
 ];
 const CDN_NAMES=CDNS.map(c=>c.n);
+/* brand marks live in Assets/Logos — CDNs with no file there fall back to a colored initial */
+const LOGO={
+ "Akamai":"Akamai.svg", "Bunny.net":"Bunny net.svg", "CacheFly":"Cachefly.svg", "CDN77":"CDN77.svg", "CDNetworks":"cdn networks.svg",
+ "Cloudflare":"Cloudfare.svg", "CloudFront":"Cloudfront.svg", "Fastly":"Fastly.svg", "GCore":"GCore.svg",
+ "Google":"Google.svg", "Medianova":"Medinova.svg", "Tata":"Tata.svg", "IO River VCDN":"IO River vcdn logo.svg"
+};
+function logoHTML(n){
+  const f=LOGO[n];
+  return f?`<img class="logo" src="Assets/Logos/${encodeURIComponent(f)}" alt="" width="32" height="32">`
+          :`<span class="logo-fb" style="background:${color(n)}">${n.charAt(0)}</span>`;
+}
 const VCDN="IO River VCDN", VCDN_COL="#0065FF";
 const BLEND="Your Multi-CDN";
 /* with a single CDN picked, show its real name instead of the generic "Multi-CDN" label */
@@ -322,7 +433,6 @@ const OTHER_COL="#9aa7b5";
 const REL_GOOD="#2f9e44", REL_MID="#e8b33a", REL_BAD="#d64545";
 const REL_MAX=25;        /* % slower than best == full red */
 const PAR_PCT=5;         /* within this % of best counts as "at par" (multi-CDN blend coverage, table) */
-const VCDN_PAR_PCT=10;   /* IO River VCDN's own win threshold — its fixed routing overhead needs more room */
 
 const REGIONS=[
  {id:"NA",n:"North America"},{id:"SA",n:"South America"},{id:"EU",n:"Europe"},
@@ -444,10 +554,23 @@ const S={
   scope:"Global", obj:"Small",
   dayIdx:DAYS_N-1, playTimer:null,
   sel:[],                       /* the CDNs in your multi-CDN, in the order added */
-  vcdn:false,
+  mode:"single",                /* "multi" = additive selection, "single" = one CDN at a time */
   thr:{g:15,y:60,o:120}, absMode:false,
   profileCDN:null
 };
+
+/* one render per tick: slider drags fire oninput far faster than the full
+   innerHTML rebuild can keep up, so renders are coalesced */
+let RENDER_PENDING=false;
+function scheduleRender(){
+  if(RENDER_PENDING) return;
+  RENDER_PENDING=true;
+  setTimeout(()=>{ RENDER_PENDING=false; render(); },16);
+}
+/* top-bar dropdowns close when the click lands anywhere outside them */
+document.addEventListener("click",e=>{
+  document.querySelectorAll("details.dd[open]").forEach(d=>{ if(!d.contains(e.target)) d.open=false; });
+});
 
 /* ---------- geography + latency ---------- */
 function unitsFor(scope){
@@ -505,7 +628,7 @@ function unitLatency(cdn,u,day){
 }
 /* latency of any entity: a CDN name, your blend, or IO River VCDN */
 function entLat(ent,u){
-  if(ent===BLEND){ if(!S.sel.length) return null; return Math.min(...S.sel.map(c=>unitLatency(c,u))); }
+  if(ent===BLEND){ if(!S.sel.length) return null; return Math.min(...S.sel.map(c=>entLat(c,u))); }
   if(ent===VCDN) return Math.min(...CDN_NAMES.map(c=>unitLatency(c,u)))+1.5;
   return unitLatency(ent,u);
 }
@@ -564,33 +687,33 @@ function winnerColor(u){
   return t<0.5 ? mixHex(base,"#ffffff",0.06+t*0.60)
                : mixHex(base,"#16202b",(t-0.5)*0.46);
 }
-/* IO River VCDN overlay: blue only where the VCDN wins — everywhere else the map
-   keeps whatever colouring the current view already uses */
-function vcdnWins(u){ return gapAt(VCDN,u)<=VCDN_PAR_PCT; }
 function thrColor(v){ return v<=S.thr.g?"#2da44e": v<=S.thr.y?"#d4a72c": v<=S.thr.o?"#e8793a":"#cf222e"; }
 
-/* ---------- left rail controls ---------- */
-function seg(id,options,get,set){
-  const el=document.getElementById(id); el.innerHTML="";
-  options.forEach(o=>{
-    const b=document.createElement("button");
-    b.textContent=o; if(get()===o)b.classList.add("on");
-    b.onclick=()=>{ set(o); render(); };
-    el.appendChild(b);
+/* ---------- top filter bar controls ---------- */
+/* each filter is a dropdown whose summary shows the value currently in effect */
+function dd(id,options,get,set,label){
+  const el=document.getElementById(id), cur=get();
+  el.innerHTML=`<summary>${label?label(cur):cur}</summary><div class="dd-body">`+
+    options.map(o=>`<button class="dd-opt${o===cur?" on":""}" data-v="${o}">${label?label(o):o}</button>`).join("")+
+    `</div>`;
+  el.querySelectorAll(".dd-opt").forEach(b=>{
+    b.onclick=()=>{ el.open=false; set(b.dataset.v); render(); };
   });
 }
 function renderControls(){
-  seg("segScope",["Global","US","Europe"],()=>S.scope,v=>S.scope=v);
-  seg("segObj",["Small","Large"],()=>S.obj,v=>S.obj=v);
+  dd("ddScope",["Global","US","Europe"],()=>S.scope,v=>S.scope=v);
+  dd("ddObj",["Small","Large"],()=>S.obj,v=>S.obj=v,v=>v+" object");
 
   const r=document.getElementById("tlRange");
-  r.value=S.dayIdx;
-  r.oninput=()=>{ stopPlay(); S.dayIdx=+r.value; render(); };
-  document.getElementById("tlDate").textContent=fmtDate(dateKey());
-  document.getElementById("tlFirst").textContent=fmtDate(dayISO(0));
-  document.getElementById("tlLast").textContent=fmtDate(dayISO(DAYS_N-1));
+  /* never write back into the slider the user is dragging — it fights the thumb */
+  if(document.activeElement!==r) r.value=S.dayIdx;
+  r.oninput=()=>{ stopPlay(); S.dayIdx=+r.value; scheduleRender(); };
+  /* the header names the whole range the slider covers, e.g. "20 July - 19 Aug" */
+  const span=d=>new Date(d+"T00:00:00Z").toLocaleDateString("en-GB",
+    {day:"numeric",month:"long",timeZone:"UTC"});
+  document.getElementById("tlSpan").textContent=
+    `${span(dayISO(0))} - ${fmtDate(dayISO(DAYS_N-1))}`;
   const pb=document.getElementById("playBtn");
-  pb.textContent=S.playTimer?"◼":"▶";
   pb.className="playbtn"+(S.playTimer?" on":"");
   pb.onclick=()=>{ S.playTimer?stopPlay():startPlay(); render(); };
 
@@ -599,9 +722,9 @@ function renderControls(){
   ac.onchange=()=>{ S.absMode=ac.checked; render(); };
   [["thrG","g"],["thrY","y"],["thrO","o"]].forEach(([id,k])=>{
     const el=document.getElementById(id);
-    el.value=S.thr[k];
-    document.getElementById(id+"v").textContent=S.thr[k];
-    el.oninput=()=>{ S.thr[k]=+el.value; S.absMode=true; render(); };
+    if(document.activeElement!==el) el.value=S.thr[k];
+    document.getElementById(id+"v").textContent=S.thr[k]+"ms";
+    el.oninput=()=>{ S.thr[k]=+el.value; S.absMode=true; scheduleRender(); };
   });
 }
 
@@ -612,32 +735,61 @@ function startPlay(){
   S.playTimer=setInterval(()=>{
     if(S.dayIdx>=DAYS_N-1){ stopPlay(); render(); return; }
     S.dayIdx++; render();
-  },700);
+  },200);
 }
 function stopPlay(){ if(S.playTimer){ clearInterval(S.playTimer); S.playTimer=null; } }
 
 /* ---------- right rail: build your multi-CDN ---------- */
+/* the CDN rows keep the position they are first given, so the list never reshuffles */
+let RAIL_ORDER=[];
 function renderRail(){
+  /* Multi-CDN vs Single CDN selection mode — switch on = build a multi-CDN */
+  const sw=document.getElementById("modeSwitch");
+  sw.checked=(S.mode==="multi");
+  sw.onchange=()=>{
+    const k=sw.checked?"multi":"single";
+    S.mode=k;
+    /* switching on "build your own" starts from a clean slate: no CDN selected,
+       so the map falls back to Best CDN per region until the user picks some */
+    /* and switching back off returns to the default view, Best CDN per region */
+    S.sel=[];
+    S.profileCDN=null;
+    render();
+  };
+  /* the card keeps one heading in both modes — the switch itself shows the mode */
+  document.getElementById("railDiv").textContent="Build your own Multi-CDN";
+
   const bc=document.getElementById("bestChip");
   bc.className="chip best-chip"+(S.sel.length?"":" on");
+  /* in multi-CDN mode the list is a set of picks, not a choice of one view, so the
+     Best-CDN-per-region option drops out — the map still falls back to it while nothing
+     is picked, it just isn't offered as a row */
+  bc.style.display=S.mode==="multi"?"none":"";
   bc.onclick=()=>{ S.sel=[]; S.profileCDN=null; render(); };
 
   const el=document.getElementById("chips"); el.innerHTML="";
-  CDNS.map(c=>({n:c.n,v:medLat(c.n)})).sort((a,b)=>a.v-b.v).forEach(c=>{
+  /* IO River VCDN sits in the same list as every other CDN — no special placement.
+     The order is settled once, on the first render, and then held: ranking it on every
+     render made rows jump around under the cursor whenever the day changed. */
+  if(!RAIL_ORDER.length)
+    RAIL_ORDER=[...CDN_NAMES,VCDN].map(n=>({n,v:medLat(n)})).sort((a,b)=>a.v-b.v).map(x=>x.n);
+  RAIL_ORDER.forEach(name=>{
+    const c={n:name};
     const on=S.sel.includes(c.n);
     const b=document.createElement("button");
     b.className="chip"+(on?" on":"");
-    b.innerHTML=`<span class="dot"></span>${c.n}<span class="cms">${fmt(c.v)} ms</span>`;
+    b.innerHTML=`${logoHTML(c.n)}${c.n}`;
     b.onclick=()=>{
-      if(on){ S.sel=S.sel.filter(x=>x!==c.n); if(S.profileCDN===c.n)S.profileCDN=null; }
+      if(S.mode==="single"){
+        S.sel=on?[]:[c.n];
+        if(S.profileCDN&&!S.sel.includes(S.profileCDN))S.profileCDN=null;
+      }
+      else if(on){ S.sel=S.sel.filter(x=>x!==c.n); if(S.profileCDN===c.n)S.profileCDN=null; }
       else S.sel.push(c.n);
       render();
     };
     el.appendChild(b);
   });
-  document.getElementById("pickHint").textContent=
-    S.sel.length?`${S.sel.length} selected · add another to close the remaining gaps`
-    :`Showing the fastest CDN per ${unitWord()} — select CDNs to build your own blend`;
 }
 
 /* ---------- map ---------- */
@@ -736,29 +888,43 @@ function mapHTML(){
   if(S.absMode) fill=u=>thrColor(S.sel.length?entLat(BLEND,u):bestAt(u).v);
   else if(S.sel.length) fill=u=>latColor(entLat(BLEND,u));
   else fill=u=>winnerColor(u);
-  const base=fill;
-  /* the "IO River VCDN wins here" claim only holds where we have real per-country
-     data — the 131 estimated background regions keep their base estimate instead */
-  if(S.vcdn) fill=u=>vcdnWins(u)?VCDN_COL:base(u);
-  return `<div class="mapwrap mapfixed">`+geoSVG(S.scope,fill,"mapTip",'id="mapsvg"',base)+`</div>`;
+  /* the scale lives inside the frame so it always floats over the map's southern
+     band, whatever the card's other rows do */
+  /* the scale explains a latency colouring, so it is dropped in the best-CDN-per-region
+     view, where the colours stand for which CDN wins rather than how fast it is */
+  const scale=S.absMode?thrLegendHTML():S.sel.length?relScaleHTML():"";
+  return `<div class="mapwrap mapfixed">`+geoSVG(S.scope,fill,"mapTip",'id="mapsvg" preserveAspectRatio="none"',fill)
+    +scale+`</div>`;
 }
-/* the annotation: which CDN is fastest right here, and how your blend compares */
+/* tooltip row: colored dot + label on the left, value right-aligned */
+function tipRow(dot,label,value,cls){
+  return `<div class="tt-row"><span class="tt-k"><span class="tt-dot" style="background:${dot}"></span>${label}</span>
+    <span class="tt-v${cls?" "+cls:""}">${value}</span></div>`;
+}
+/* one row per selected CDN, then the gap between your pick and the local winner */
+function selRowsHTML(latOf,bestV){
+  if(!S.sel.length) return "";
+  const MAX=3;
+  let html="";
+  S.sel.slice(0,MAX).forEach(c=>{
+    html+=tipRow(color(c),`Selected CDN : ${c}`,`${latOf(c).toFixed(2)}ms`);
+  });
+  if(S.sel.length>MAX) html+=tipRow(OTHER_COL,`+${S.sel.length-MAX} more selected`,"");
+  /* with several CDNs picked the blend is what actually gets served, so the gap is measured on it */
+  const v=S.sel.length>1?latOf(BLEND):latOf(S.sel[0]);
+  if(S.sel.length>1) html+=tipRow(VCDN_COL,BLEND,`${v.toFixed(2)}ms`);
+  const d=v-bestV;
+  html+=d<=0.05
+    ? tipRow(REL_GOOD,"Diff","fastest here","par")
+    : tipRow("#D83232","Diff",`${d.toFixed(1)}ms`,"diff");
+  return html;
+}
+/* the annotation: which CDN is fastest right here, and how your picks compare */
 function mapTip(e,code){
   const u=unitById(code); if(!u)return;
-  const b=bestAt(u), pop=unitPop(u);
-  let html=`<div>Best CDN: ${b.cdn}</div>
-    <div>Latency: ${b.v.toFixed(2)} ms</div>`;
-  if(pop) html+=`<div>Population: ${pop.toFixed(2)}M</div>`;
-  if(S.vcdn){
-    const v=entLat(VCDN,u), g=gapAt(VCDN,u);
-    html+=`<div class="tt-sep"></div><div class="tt-you">IO River VCDN: ${v.toFixed(2)} ms
-      <b style="color:${g<=VCDN_PAR_PCT?"#7fb2ff":"#c9d8ee"}">${g<=VCDN_PAR_PCT?"— wins here":"— +"+g.toFixed(1)+"%"}</b></div>`;
-  }
-  if(S.sel.length){
-    const v=entLat(BLEND,u);
-    html+=`<div class="tt-sep"></div><div class="tt-you">${blendLabel()}: ${v.toFixed(2)} ms
-      <b style="color:${latColor(v)}">— ${absPerfLabel(v).toLowerCase()}</b></div>`;
-  }
+  const b=bestAt(u);
+  let html=tipRow(color(b.cdn),`Best CDN : ${b.cdn}`,`${b.v.toFixed(2)}ms`);
+  html+=selRowsHTML(ent=>entLat(ent,u),b.v);
   showTip(e,u.name,html);
 }
 /* hover for the 131 estimated landmasses — no real per-country data, so this
@@ -769,21 +935,20 @@ function bgTip(e,macro){
   if(!us.length) return;
   let bc=null,bv=Infinity;
   CDN_NAMES.forEach(c=>{ const v=med(us.map(u=>unitLatency(c,u))); if(v<bv){bv=v;bc=c;} });
-  let html=`<div>Best CDN (region est.): ${bc}</div><div>Latency: ${bv.toFixed(2)} ms</div>`;
-  if(S.sel.length){
-    const v=med(us.map(u=>entLat(BLEND,u)));
-    html+=`<div class="tt-sep"></div><div class="tt-you">${blendLabel()}: ${v.toFixed(2)} ms
-      <b style="color:${latColor(v)}">— ${absPerfLabel(v).toLowerCase()}</b></div>`;
-  }
-  html+=`<div class="tt-sep"></div><div style="opacity:.65;font-size:11px">Estimated from ${rg?rg.n:macro} · no country-level data here</div>`;
+  let html=tipRow(color(bc),`Best CDN : ${bc}`,`${bv.toFixed(2)}ms`);
+  html+=selRowsHTML(ent=>med(us.map(u=>entLat(ent,u))),bv);
+  html+=`<div class="tt-note">Region estimate · no country-level data here</div>`;
   showTip(e,rg?rg.n:macro,html);
 }
 function showTip(e,title,body){
   const t=document.getElementById("tooltip");
-  t.innerHTML=`<div class="tt-t">${title}</div>${body}`;
+  t.innerHTML=`<div class="tt-in">
+    <div class="tt-head"><span class="tt-t">${title}</span><span class="tt-rule"></span></div>
+    <div class="tt-rows">${body}</div>
+  </div>`;
   t.style.display="block";
-  t.style.left=Math.min(e.clientX+16,window.innerWidth-300)+"px";
-  t.style.top=Math.min(e.clientY+16,window.innerHeight-170)+"px";
+  t.style.left=Math.min(e.clientX+16,window.innerWidth-228)+"px";
+  t.style.top=Math.min(e.clientY+16,window.innerHeight-t.offsetHeight-12)+"px";
 }
 function hideTip(){ document.getElementById("tooltip").style.display="none"; }
 
@@ -804,22 +969,20 @@ function relScaleHTML(){
     </div>
   </div>`;
 }
-function vcdnLegendHTML(){
-  const us=units(), at=us.filter(vcdnWins).length;
-  return `<div class="legend" style="margin-bottom:8px">
-    <span class="leg-item"><span class="dot" style="background:${VCDN_COL}"></span><b style="color:${VCDN_COL}">IO River VCDN wins</b>&nbsp;· ${at} of ${us.length} ${unitNoun()} in blue</span>
-  </div>`;
-}
-function winnerLegendHTML(){
-  const wins={};
-  units().forEach(u=>{ const w=bestAt(u).cdn; wins[w]=(wins[w]||0)+1; });
-  const noun=unitNoun();
-  return `<div class="legend">`+Object.keys(wins).sort((a,b)=>wins[b]-wins[a]).map(c=>
-    `<span class="leg-item"><span class="dot" style="background:${color(c)}"></span>${c} · ${wins[c]} ${noun}</span>`).join("")+`</div>`;
-}
+/* absolute-latency mode reads on the same bar as the relative scale — four hard bands
+   instead of a continuous ramp, so the thresholds stay legible while the shape matches */
 function thrLegendHTML(){
-  const sw=(c,t)=>`<span class="leg-item"><span class="dot" style="background:${c};border-radius:3px"></span>${t}</span>`;
-  return `<div class="legend">${sw("#2da44e","≤ "+S.thr.g+" ms")}${sw("#d4a72c","≤ "+S.thr.y+" ms")}${sw("#e8793a","≤ "+S.thr.o+" ms")}${sw("#cf222e","> "+S.thr.o+" ms")}</div>`;
+  const c=["#2da44e","#d4a72c","#e8793a","#cf222e"];
+  const stops=c.map((col,i)=>`${col} ${i*25}%, ${col} ${(i+1)*25}%`).join(", ");
+  const ticks=[`≤ ${S.thr.g} ms`,`≤ ${S.thr.y} ms`,`≤ ${S.thr.o} ms`,`> ${S.thr.o} ms`]
+    .map(t=>`<span><b>${t}</b></span>`).join("");
+  return `<div class="relscale">
+    <div class="rs-title">Latency</div>
+    <div class="rs-body">
+      <div class="rs-bar" style="background:linear-gradient(90deg, ${stops})"></div>
+      <div class="rs-ticks rs-ticks-4">${ticks}</div>
+    </div>
+  </div>`;
 }
 
 /* ---------- compact CDN chips inside the map frame ---------- */
@@ -836,9 +999,10 @@ function miniCardsHTML(){
 }
 function miniTip(e,cdn){
   const v=medLat(cdn), w=winsOf(cdn), n=units().length;
-  showTip(e,cdn,`<div class="row">median latency<span class="ms">${fmt(v)} ms</span></div>
-    <div class="row" style="opacity:.85">fastest in ${w} of ${n} ${unitNoun()}</div>
-    <div class="row" style="opacity:.7;font-size:12px">click for full profile</div>`);
+  showTip(e,cdn,
+    tipRow(color(cdn),"Median latency",`${fmt(v)}ms`)+
+    tipRow(color(cdn),`Fastest in`,`${w} of ${n}`)+
+    `<div class="tt-note">Click for the full profile</div>`);
 }
 
 /* ---------- headline ---------- */
@@ -899,42 +1063,51 @@ function latGradientCSS(){
   return "linear-gradient(90deg,"+LAT_STOPS.map(s=>s[1]+" "+(s[0]*100).toFixed(0)+"%").join(",")+")";
 }
 function absPerfLabel(ms){ return ms<=30?"Excellent": ms<=60?"Good": ms<=90?"Fair":"Slow"; }
-/* The bar is filled and sized from the same ramp the map uses, so two CDNs that both
-   land in the "Excellent" band still read as visibly different here. The label keeps the
-   discrete, saturated colour — the fine ramp shades are too light to read as text. */
+/* the band reads as a pill: green for Excellent, amber for everything slower */
+const PERF_STYLE={
+  Excellent:{bg:"#F8FFFD",bd:"#DFEBE7",fg:"#1D7758"},
+  Good:{bg:"#FFFBF6",bd:"#F0E4D8",fg:"#E17100"},
+  Fair:{bg:"#FFF8F4",bd:"#F3DED2",fg:"#C2410C"},
+  Slow:{bg:"#FFF5F5",bd:"#F3D6D6",fg:"#C02626"}
+};
 function perfCell(ms){
-  const [lo,hi]=latDomain();
-  const w=Math.max(8,Math.min(100,100-(ms-lo)/(hi-lo)*100));
-  return `<div class="perf">
-    <span class="perf-bar"><span style="width:${w.toFixed(0)}%;background:${latColor(ms)}"></span></span>
-    <span class="perf-lab" style="color:${absPerfColor(ms)}">${absPerfLabel(ms)}</span>
-  </div>`;
+  const lab=absPerfLabel(ms), st=PERF_STYLE[lab];
+  return `<span class="ct-pill" style="background:${st.bg};border:1px solid ${st.bd};color:${st.fg}">${lab}</span>`;
+}
+/* RUM uptime: the share of real-user samples that came back successfully. There is no
+   uptime feed behind the prototype, so it is simulated the same way latency is — a stable
+   per-CDN baseline in the 99.5-99.99% range, nudged slightly by the selected day. */
+function rumUptime(ent){
+  if(ent===BLEND){
+    /* a multi-CDN only fails where every CDN it uses fails, so it beats its own members */
+    if(!S.sel.length) return 99.99;
+    const miss=S.sel.reduce((m,c)=>m*(100-rumUptime(c))/100,1);
+    return Math.min(99.995,100-miss*100);
+  }
+  const base=99.5+hash(ent+"|uptime")*0.48;
+  const drift=(hash(ent+"|"+dateKey())-0.5)*0.06;
+  return Math.max(99.4,Math.min(99.99,base+drift));
 }
 function comparisonTableHTML(){
-  const n=units().length;
   const rows=[];
   if(S.sel.length>1) rows.push({name:BLEND,ent:BLEND,cls:"blend-row"});
-  if(S.vcdn) rows.push({name:VCDN,ent:VCDN,cls:"sel-row"});
-  /* every CDN, ranked fastest first by median latency */
-  CDN_NAMES.map(c=>({name:c,ent:c,cls:S.sel.includes(c)?"sel-row":"",v:medLat(c)}))
+  /* every CDN (IO River VCDN included, no special placement), ranked fastest first */
+  [...CDN_NAMES,VCDN].map(c=>({name:c,ent:c,cls:S.sel.includes(c)?"sel-row":"",v:medLat(c)}))
     .sort((a,b)=>a.v-b.v).forEach(r=>rows.push(r));
 
-  let h=`<div class="tblwrap"><table class="data"><thead><tr>
-    <th>CDN</th><th>Performance</th><th class="num">Median</th><th class="num">Wins</th><th class="num">At par</th>
-  </tr></thead><tbody>`;
+  let h=`<div class="ctable"><div class="ct-head">
+    <span>CDN</span><span>Performance</span><span>Median</span><span>RUM Uptime</span>
+  </div>`;
   rows.forEach(r=>{
-    const m=medLat(r.ent), cov=coverage(r.ent);
-    const wins=r.ent===BLEND?units().filter(u=>gapAt(BLEND,u)<0.05).length
-             :r.ent===VCDN?0:winsOf(r.ent);
-    h+=`<tr class="${r.cls}">
-      <td><span class="cdn-cell"><span class="dot" style="background:${color(r.name)}"></span>${r.name}</span></td>
-      <td class="gap">${perfCell(m)}</td>
-      <td class="num">${fmt(m)} ms</td>
-      <td class="num">${r.ent===VCDN?"—":wins+"/"+n}</td>
-      <td class="num">${cov.toFixed(0)}%</td>
-      </tr>`;
+    const m=medLat(r.ent);
+    h+=`<div class="ct-row ${r.cls}">
+      <span class="ct-cdn">${r.ent===BLEND?"":logoHTML(r.name)}${r.name}</span>
+      <span>${perfCell(m)}</span>
+      <span>${fmt(m)} ms</span>
+      <span>${rumUptime(r.ent).toFixed(2)}%</span>
+    </div>`;
   });
-  h+=`</tbody></table></div>`;
+  h+=`</div>`;
   return h;
 }
 
@@ -947,7 +1120,7 @@ function openProfile(cdn){
 function renderProfile(){
   const el=document.getElementById("profile"), cdn=S.profileCDN;
   if(!cdn){ el.className=""; el.innerHTML=""; return; }
-  const us=units(), vals=us.map(u=>unitLatency(cdn,u));
+  const us=units(), vals=us.map(u=>entLat(cdn,u));
   const min=Math.min(...vals), max=Math.max(...vals), denom=(max-min)||1;
   const dark=color(cdn), light=mixHex("#ffffff",dark,0.12);
   const rows=us.map((u,i)=>({u,v:vals[i],g:gapAt(cdn,u)})).sort((a,b)=>a.g-b.g);
@@ -967,36 +1140,117 @@ function renderProfile(){
       <div class="pf-stat"><div class="v">${worstU.u.name}</div><div class="k">Weakest · +${worstU.g.toFixed(0)}% vs fastest</div></div>
     </div>
     <div class="gradbar">${fmt(min)} ms <span class="g" style="background:linear-gradient(90deg,${light},${dark})"></span> ${fmt(max)} ms</div>
-    <div class="mapwrap">${geoSVG(S.scope,u=>mixHex(light,dark,(unitLatency(cdn,u)-min)/denom),"mapTip",'class="pfmap"')}</div>`;
+    <div class="mapwrap">${geoSVG(S.scope,u=>mixHex(light,dark,(entLat(cdn,u)-min)/denom),"mapTip",'class="pfmap"')}</div>`;
 }
+
+/* The world viewBox carries empty margin around the landmasses, and a few paths trail
+   thin slivers far past the bulk of their shape (the Aleutians hang ~40 units west of
+   mainland Alaska, mid-ocean island chains span nearly the whole width). Fitting to raw
+   bounding boxes therefore still leaves a visible strip of blank on the left.
+   Instead sample points along every path and clip the viewBox to the range that holds
+   virtually all of the ink, so the map fills the frame edge to edge. The result only
+   depends on the scope's geometry, so it is computed once per scope and cached. */
+const MAP_FIT={};
+function mapFitBox(scope){
+  /* US and Europe already ship a viewBox framed on their own region (GEO.us.vb and
+     GEO.world.eu_vb), so they are left alone — refitting them to the shapes that carry
+     data would zoom back out, since Russia reaches the Pacific in the Europe set. */
+  if(scope!=="Global") return null;
+  if(MAP_FIT[scope]) return MAP_FIT[scope];
+  const s=document.getElementById("mapsvg"); if(!s) return null;
+  const xs=[],ys=[];
+  /* Global keeps the whole drawing, Antarctica included. US and Europe are regional
+     views, so they fit to the shapes that actually carry data — otherwise the untracked
+     rest of the world drags the box back out to the full planet. */
+  const sel=scope==="Global"?"path":"path.geopath";
+  s.querySelectorAll(sel).forEach(p=>{
+    const len=p.getTotalLength(); if(!len) return;
+    const n=Math.max(8,Math.min(120,Math.round(len/6)));
+    for(let i=0;i<=n;i++){ const pt=p.getPointAtLength(len*i/n); xs.push(pt.x); ys.push(pt.y); }
+  });
+  if(xs.length<50) return null;
+  xs.sort((a,b)=>a-b); ys.sort((a,b)=>a-b);
+  /* a hair off each end drops the stray slivers without cutting into any real coastline */
+  const q=(arr,f)=>arr[Math.min(arr.length-1,Math.max(0,Math.round((arr.length-1)*f)))];
+  const lo=scope==="Global"?.0005:0, hiX=scope==="Global"?.997:1, hiY=scope==="Global"?.999:1;
+  const box={x:q(xs,lo), y:q(ys,lo), x1:q(xs,hiX), y1:q(ys,hiY)};
+  /* a regional view gets a little breathing room around the countries it shows */
+  const pad=scope==="Global"?2:Math.max(box.x1-box.x,box.y1-box.y)*0.04;
+  box.x-=pad; box.y-=pad; box.x1+=pad; box.y1+=pad;
+  MAP_FIT[scope]=box;
+  return box;
+}
+/* the frame is a fixed size, so the viewBox is grown on its short axis to match the
+   frame's proportions: the map fills the card on both axes and still keeps its shape,
+   the extra room simply shows a little more of the surrounding geography */
+const MAP_VB_BASE={};
+function baseViewBox(scope,s){
+  if(MAP_VB_BASE[scope]) return MAP_VB_BASE[scope];
+  const b=mapFitBox(scope);
+  let vb;
+  if(b) vb=[b.x,b.y,b.x1-b.x,b.y1-b.y];
+  else {
+    /* a regional scope ships its own framing — pull back so the region is not pressed
+       against the card edges and the latency scale keeps a clear band under it */
+    const cur=(s.getAttribute("viewBox")||"").split(/[ ,]+/).map(Number);
+    if(cur.length!==4||!cur[2]||!cur[3]) return null;
+    const zoomOut=0.15;
+    vb=[cur[0]-cur[2]*zoomOut/2, cur[1]-cur[3]*zoomOut/2, cur[2]*(1+zoomOut), cur[3]*(1+zoomOut)];
+  }
+  MAP_VB_BASE[scope]=vb;
+  return vb;
+}
+function fitMapToBox(){
+  const s=document.getElementById("mapsvg"); if(!s) return;
+  const frame=s.closest(".mapfixed"); if(!frame) return;
+  const base=baseViewBox(S.scope,s); if(!base) return;
+  let [x,y,w,h]=base;
+  if(S.scope==="Global"){
+    /* Global keeps its own proportions: the card takes the world map's shape */
+    frame.style.height="auto";
+    frame.style.aspectRatio=`${w} / ${h}`;
+  } else {
+    /* the regional views share one fixed card height, so the viewBox grows on its short
+       axis to match the frame instead of the geography being stretched */
+    frame.style.height="";
+    frame.style.aspectRatio="";
+    const fr=frame.getBoundingClientRect();
+    if(fr.width&&fr.height){
+      const want=fr.width/fr.height;
+      if(w/h<want){ const nw=h*want; x-=(nw-w)/2; w=nw; }
+      else { const nh=w/want; y-=(nh-h)/2; h=nh; }
+    }
+  }
+  s.setAttribute("viewBox",`${x} ${y} ${w} ${h}`);
+  /* the US shape sits low in its own frame, so pin its top edge 4px under the frame's */
+  if(S.scope==="US"){
+    const fr=frame.getBoundingClientRect();
+    const land=[...s.querySelectorAll("path.geopath")].map(p=>p.getBoundingClientRect());
+    if(land.length&&fr.height){
+      const gap=Math.min(...land.map(r=>r.top))-fr.top;
+      y+=(gap-4)*(h/fr.height);
+      s.setAttribute("viewBox",`${x} ${y} ${w} ${h}`);
+    }
+  }
+}
+/* the frame keeps its size on resize, but its proportions change, so refit */
+addEventListener("resize",()=>fitMapToBox());
 
 /* ---------- main render ---------- */
 function render(){
   renderControls(); renderRail();
-  const el=document.getElementById("content");
-  el.innerHTML=`
-    <section>
-      <div class="sec-head">
-        <h2>Latency by region</h2>
-        <label class="chk view-seg vcdn-toggle" style="margin-bottom:0"><input type="checkbox" ${S.vcdn?"checked":""} onchange="S.vcdn=this.checked;render()"> Include IO River VCDN</label>
-      </div>
-      <div class="sec-sub">${S.absMode
-        ?`Each ${unitWord()} is colored by absolute latency against your thresholds`
-        :S.sel.length
-        ?`Each ${unitWord()} is colored by ${S.sel.length===1?blendLabel()+"'s":"your Multi-CDN's"} latency there`
-        :`Each ${unitWord()} is colored by the CDN that is fastest there`}${
-        S.vcdn?` · blue marks where IO River VCDN wins`:""} · ${fmtDate(dateKey())} · ${S.obj.toLowerCase()} objects · hover for details</div>
-      ${S.vcdn?vcdnLegendHTML():""}
-      ${S.absMode?thrLegendHTML():S.sel.length?"":winnerLegendHTML()}
+  /* the map card shares row 1 with the CDN rail, so it renders on its own */
+  document.getElementById("content").innerHTML=`
+    <section class="mapcard">
       ${mapHTML()}
-      ${S.sel.length&&!S.absMode?relScaleHTML():""}
-      ${miniCardsHTML()}
-    </section>`+`
-    <section>
-      <h2>Comparison table</h2>
-      <div class="sec-sub">Every CDN on ${fmtDate(dateKey())}, ${S.scope==="Global"?"all regions":S.scope==="US"?"United States":"Europe"} · performance bands: 0–30ms green, 30–60ms yellow, 60–90ms orange, 90ms+ red · “At par” = within ${PAR_PCT}% of the fastest CDN in that ${unitWord()}</div>
-      ${comparisonTableHTML()}
     </section>`;
+  fitMapToBox();
+  document.getElementById("tableArea").innerHTML=`
+    <div>
+      <h2 class="ct-title">Comparison Table</h2>
+      <div class="sec-sub">Every CDN on ${fmtDate(dateKey())}, ${S.scope==="Global"?"all regions":S.scope==="US"?"United States":"Europe"} · performance bands: 0–30ms Excellent, 30–60ms Good, 60–90ms Fair, 90ms+ Slow · RUM uptime = share of real-user samples answered successfully</div>
+      ${comparisonTableHTML()}
+    </div>`;
   renderProfile();
 }
 render();
