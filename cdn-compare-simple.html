@@ -1372,8 +1372,10 @@ function headlineHTML(){
 function absPerfColor(ms){ return ms<=30?"#2da44e": ms<=60?"#d4a72c": ms<=90?"#e8793a":"#cf222e"; }
 /* Continuous latency ramp, positioned 0-1 across the scale rather than at fixed ms,
    so the same colours stretch over whatever range the data actually occupies. Deep
-   green through the light greens into yellow, orange and red. */
-const LAT_STOPS=[[0,"#0a6b2e"],[.14,"#2da44e"],[.28,"#6cc061"],[.42,"#a8d96a"],
+   green through the light greens into yellow, orange and red. The fastest end is a mid
+   green rather than a near-black one: at the bottom of the ramp whole countries were
+   turning almost black, which read as a problem rather than as the best result. */
+const LAT_STOPS=[[0,"#3aa85c"],[.14,"#5cb85f"],[.28,"#84c96a"],[.42,"#b0dc76"],
                  [.56,"#dfe06b"],[.68,"#f0d34e"],[.80,"#f0a63c"],[.90,"#e8703a"],[1,"#cf222e"]];
 /* Every CDN sits inside a narrow latency band — roughly 10-65 ms for small objects — so a
    ramp pinned to 0-120 ms paints nearly every country the same green and the CDNs become
