@@ -60,8 +60,10 @@ h1{font-size:28px; color:#0b0f19;}
   text-transform:uppercase; color:var(--ink); white-space:nowrap;}
 .dd>summary::-webkit-details-marker{display:none;}
 .dd>summary:hover{border-color:#96C0FF; color:var(--brand-blue);}
-/* open: the trigger picks up the brand blue and a soft blue outline */
-.dd[open]>summary{border-color:#96C0FF; color:var(--brand-blue); font-weight:700;}
+/* open — or, for the latency filter, while its colouring is applied — the trigger picks up
+   the brand blue and a soft blue outline */
+.dd[open]>summary,
+.dd.on>summary{border-color:#96C0FF; color:var(--brand-blue); font-weight:700;}
 .dd>summary::after{content:""; width:13px; height:13px; margin-left:auto; flex:0 0 auto; background:currentColor;
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/13px 13px no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/13px 13px no-repeat;
@@ -177,7 +179,8 @@ input.tlrange{width:100%; accent-color:var(--brand-blue); margin:0; height:18px;
 /* the ruler gets its own strip under the map, so nothing is drawn over Antarctica */
 /* an opaque band so the ruler reads over open water; JS parks it just above Antarctica */
 .tl-strip{position:absolute; left:0; right:0; bottom:0; padding:10px 24px 6px; background:#fff;}
-.tlbar .tl-top{display:flex; align-items:center; gap:9px; margin-bottom:6px; padding-left:12px;}
+/* the header sits flush with the track below it, on both the ruler and the slider */
+.tlbar .tl-top{display:flex; align-items:center; gap:9px; margin-bottom:6px;}
 .tlbar .tl-span,.tlbar .tl-lab{font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:12px; font-weight:400;
   letter-spacing:.04em; text-transform:uppercase; color:var(--ink); white-space:nowrap;}
 /* the covered range on the left, the window's name on the right, next to play */
@@ -393,7 +396,7 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 /* map annotation tooltip — white card, one row per CDN, value right-aligned */
 /* above the sticky filter row and the CDN rail, both of which sit in their own layers */
 .tooltip{position:fixed; pointer-events:none; z-index:300; display:none; box-sizing:border-box;
-  width:212px; padding:8px; background:#fff; border:1px solid #D3E1FE; border-radius:4px;
+  width:max-content; min-width:212px; max-width:320px; padding:8px; background:#fff; border:1px solid #D3E1FE; border-radius:4px;
   box-shadow:0 4px 16px rgba(1,7,44,.2); font-family:'Rubik','Segoe UI',system-ui,sans-serif;}
 .tooltip .tt-in{display:flex; flex-direction:column; gap:8px; width:100%;}
 .tooltip .tt-head{display:flex; align-items:center; gap:16px;}
@@ -402,11 +405,12 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .tooltip .tt-rule{flex:0 1 100px; height:0; border-top:1px solid #C6C6C6; opacity:.2;}
 .tooltip .tt-rows{display:flex; flex-direction:column; gap:8px;}
 .tooltip .tt-row{display:flex; align-items:center; gap:12px;}
-.tooltip .tt-k{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:4px;
-  font-size:12px; line-height:140%; letter-spacing:-.02em; color:#5A697A;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+/* the name is never cut short — the card widens for it instead */
+.tooltip .tt-k{flex:1 1 auto; display:flex; align-items:center; gap:4px;
+  font-size:12px; line-height:140%; letter-spacing:-.02em; color:#5A697A; white-space:nowrap;}
 .tooltip .tt-dot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
-.tooltip .tt-v{flex:0 0 auto; font-size:12px; line-height:12px; letter-spacing:.04em; color:#1D252F; text-align:right;}
+.tooltip .tt-v{flex:0 0 auto; font-size:12px; font-weight:500; line-height:12px; letter-spacing:.04em;
+  color:#1D252F; text-align:right;}
 .tooltip .tt-v.diff{color:#D13333;}
 .tooltip .tt-v.par{color:var(--rel-good);}
 .tooltip .tt-note{font-size:11px; line-height:1.35; letter-spacing:-.02em; color:#8b98a8;}
@@ -732,7 +736,7 @@ const S={
   dayIdx:DAYS_N-1, playTimer:null,
   sel:[],                       /* the CDNs in your multi-CDN, in the order added */
   mode:"single",                /* "multi" = additive selection, "single" = one CDN at a time */
-  thr:{g:15,y:60,o:120}, absMode:false,
+  thr:{g:30,y:60,o:120}, absMode:false,
   profileCDN:null
 };
 
@@ -916,11 +920,15 @@ function renderControls(){
   const ac=document.getElementById("absChk");
   ac.checked=S.absMode;
   ac.onchange=()=>{ S.absMode=ac.checked; render(); };
+  /* the filter keeps the blue while its bands are the ones colouring the map */
+  document.getElementById("advBox").classList.toggle("on",S.absMode);
   [["thrG","g"],["thrY","y"],["thrO","o"]].forEach(([id,k])=>{
     const el=document.getElementById(id);
     if(document.activeElement!==el) el.value=S.thr[k];
     document.getElementById(id+"v").textContent=S.thr[k]+"ms";
-    el.oninput=()=>{ S.thr[k]=+el.value; S.absMode=true; scheduleRender(); };
+    /* the checkbox alone decides whether the map is coloured by these bands — dragging a
+       threshold used to switch it on, which took the map away mid-adjustment */
+    el.oninput=()=>{ S.thr[k]=+el.value; scheduleRender(); };
   });
 }
 
