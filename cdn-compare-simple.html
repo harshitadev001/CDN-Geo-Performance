@@ -13,7 +13,7 @@
   --rel-good:#2f9e44; --rel-mid:#e8b33a; --rel-bad:#d64545;
   /* rail width + column gap drive both the main grid and the timeline's right edge,
      so the timeline lines up with the map card instead of the page margin */
-  --rail-w:clamp(250px,17%,320px); --col-gap:20px; --fb-gap:14px;
+  --rail-w:clamp(250px,17%,320px); --col-gap:20px; --fb-gap:12px;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 body{font-family:'Rubik','Segoe UI',system-ui,-apple-system,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:14px;}
@@ -22,7 +22,8 @@ h1,h2,h3,.big,.pf-stat .v,.tm-head{font-family:'Rajdhani','Segoe UI',system-ui,s
 .wrap{max-width:none; margin:0 auto; padding:0 5.5%;}
 
 /* brand topbar */
-.topbar{background:#fff; height:88px; border-bottom:1px solid var(--border);}
+/* the brand bar stays put while the page scrolls under it */
+.topbar{position:sticky; top:0; z-index:400; background:#fff; height:78px; border-bottom:1px solid var(--border);}
 .topbar .wrap{display:flex; align-items:center; height:100%;}
 .brand{display:flex; align-items:center; gap:14px; text-decoration:none;}
 .brand img{width:50px; height:50px; display:block;}
@@ -38,8 +39,20 @@ h1{font-size:28px; color:#0b0f19;}
 /* horizontal filter bar under the page title */
 /* the filter row pins to the top of the window on scroll, so scope, object size and
    the timeline stay reachable while reading the map and the table */
-.filterbar{position:sticky; top:0; z-index:50; background:var(--bg);
-  display:flex; align-items:flex-start; gap:var(--fb-gap); flex-wrap:wrap; padding:20px 0 4.5px;}
+.filterbar{display:flex; align-items:flex-start; gap:var(--fb-gap); flex-wrap:wrap; padding:20px 0 16px;}
+/* map / table switch — sits at the right end of the filter row */
+.viewseg{display:inline-flex; align-items:center; margin-left:16px; flex:0 0 auto; align-self:flex-start;
+  background:#fff; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+.viewseg button{display:flex; align-items:center; justify-content:center; width:42px; height:38px;
+  border:none; background:#fff; cursor:pointer; padding:0;}
+.viewseg button+button{border-left:1px solid var(--border);}
+.viewseg button.on{background:#E6F0FF;}
+/* Assets/Map.svg ships blue and Assets/Table.svg ships slate, i.e. each already carries
+   one of the two states — a filter supplies the other, so the files are used as they are */
+.viewseg img{display:block;}
+.viewseg button:not(.on) .ic-map{filter:grayscale(1) brightness(.75) opacity(.85);}
+.viewseg button.on .ic-table{filter:brightness(0) saturate(100%) invert(36%) sepia(87%)
+  saturate(3000%) hue-rotate(207deg) brightness(101%) contrast(101%);}
 .dd{position:relative;}
 .dd>summary{list-style:none; cursor:pointer; user-select:none; display:flex; align-items:center; gap:12px;
   background:#fff; border:1px solid var(--border); border-radius:6px; padding:12px 16px;
@@ -55,10 +68,11 @@ h1{font-size:28px; color:#0b0f19;}
   transition:transform .15s;}
 .dd[open]>summary::after{transform:rotate(180deg);}
 .dd-body{position:absolute; z-index:40; top:calc(100% + 10px); left:0; min-width:210px; background:#fff;
-  border:none; border-radius:12px; box-shadow:0 12px 30px rgba(16,32,54,.16); padding:8px;}
+  border:1px solid #DCDCDC; border-radius:12px; box-shadow:0 12px 30px rgba(16,32,54,.16); padding:8px;}
 /* the little caret that ties the menu back to its trigger */
-.dd-body::before{content:""; position:absolute; top:-7px; left:22px; width:16px; height:16px;
-  background:#fff; border-radius:3px; transform:rotate(45deg);}
+.dd-body::before{content:""; position:absolute; top:-8px; left:22px; width:14px; height:14px;
+  background:#fff; border-left:1px solid #DCDCDC; border-top:1px solid #DCDCDC; border-radius:3px 0 0 0;
+  transform:rotate(45deg);}
 .dd-wide{min-width:330px; padding:18px 20px 14px;}
 .dd-opt{position:relative; display:block; width:100%; text-align:left; border:none; background:none;
   font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:14px; font-weight:400;
@@ -77,9 +91,18 @@ h1{font-size:28px; color:#0b0f19;}
 .vseg button{border:none; background:#fff; padding:8px 12px; cursor:pointer; font-size:13px; font-family:inherit; color:var(--grey); border-bottom:1px solid var(--border); text-align:left;}
 .vseg button:last-child{border-bottom:none;}
 .vseg button.on{background:var(--accent); color:#fff; font-weight:600;}
+/* the rail's width is a registered length so the fold can animate it, rather than the
+   column snapping between the two widths. The transition lives only on <body>, where the
+   value is set: declaring it here as well made the grid animate its own inherited copy on a
+   separate clock, so the map lagged behind the filter row above it. */
+@property --rail-w{syntax:"<length>"; inherits:true; initial-value:250px;}
 .layout{
   display:grid;
   grid-template-columns:1fr var(--rail-w);
+  /* the rail spans all three rows, and a spanning item spreads its leftover height across
+     them — pinning the first two to their content keeps that slack out of the gap under
+     the filter row, where it showed up as a drifting space above the table */
+  grid-template-rows:auto auto auto 1fr;
   gap:0 var(--col-gap);
   align-items:stretch;
   padding-top:0;
@@ -90,18 +113,25 @@ h1{font-size:28px; color:#0b0f19;}
 /* row 1: filter bar. row 2: map card. the rail spans both, so its card's top edge
    lines up with the filter row and its bottom with the map card — as in the design.
    row 3: profile + comparison table, under the map column only */
-.layout>.filterbar{grid-column:1; grid-row:1; min-width:0;}
+/* the filter row sits outside the grid: a sticky grid item can only travel inside its own
+   grid area, which pinned it for barely a row before it let go. Out here it can hold to the
+   top of the window, and its width is set to the map column so the timeline still ends on
+   the card's edge. */
+.filterwrap{position:sticky; top:78px; z-index:50; background:var(--bg); padding:0 5.5%;}
+.filterwrap .filterbar{width:calc(100% - var(--rail-w) - var(--col-gap));}
 #content{grid-column:1; grid-row:2; min-width:0;}
-#rail{grid-column:2; grid-row:1/span 3;}
-#below{grid-column:1; grid-row:3; min-width:0; margin-top:24px;}
+#rail{grid-column:2; grid-row:1/span 4;}
+#below{grid-column:1; grid-row:3; min-width:0; align-self:start;}
 #content .mapcard{margin-bottom:0; position:relative;}
 /* the rail matches the map card's height, and sticks in place while the page scrolls
    past it, so the CDN list stays reachable next to the table */
 #rail{position:relative; min-height:0;}
-.side>.fgroup{position:sticky; top:96px; height:auto; max-height:calc(100vh - 32px);
-  min-height:0; display:flex; flex-direction:column; margin-bottom:0; padding:14px 12px 10px;}
+/* sticky makes this a stacking context, so the info card's own z-index cannot lift it above
+   the filter row — the card itself has to outrank the filter bar */
+.side>.fgroup{position:sticky; top:174px; z-index:60; height:auto; max-height:calc(100vh - 190px);
+  transition:padding .4s cubic-bezier(.4,0,.2,1); will-change:padding; min-height:0; display:flex; flex-direction:column; margin-bottom:0; padding:14px 12px 10px;}
 /* the list still scrolls, it just doesn't show a scrollbar */
-.side .chips{overflow-y:auto; min-height:0; flex:0 1 auto; scrollbar-width:none; -ms-overflow-style:none;}
+.side .chips{overflow-y:auto; overflow-x:hidden; min-width:0; min-height:0; flex:0 1 auto; scrollbar-width:none; -ms-overflow-style:none;}
 .side .chips::-webkit-scrollbar{width:0; height:0; display:none;}
 .side::-webkit-scrollbar{width:6px;}
 .side::-webkit-scrollbar-thumb{background:#cfdae6; border-radius:3px;}
@@ -116,10 +146,38 @@ h1{font-size:28px; color:#0b0f19;}
 /* playing: the same button becomes a stop control */
 .playbtn.on img{display:none;}
 .playbtn.on::before{content:""; width:12px; height:12px; border-radius:2px; background:var(--dark);}
-input.tlrange{width:100%; accent-color:var(--accent); margin:0; height:18px; cursor:pointer;}
+/* the timeline is a date ruler: every day is labelled above its own tick mark, and the
+   selected day is called out in the brand blue */
+/* the table view keeps the original slider */
+input.tlrange{width:100%; accent-color:var(--brand-blue); margin:0; height:18px; cursor:pointer; display:block;}
+.tlticks{display:flex; align-items:flex-end; border-bottom:1px solid #DFE5EC; padding-bottom:0;
+  cursor:grab; touch-action:none; user-select:none;}
+.tlticks:active{cursor:grabbing;}
+.tlticks .tick{flex:1 1 0; min-width:0; border:none; background:none; padding:0 0 7px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px; position:relative;
+  font-family:'Rubik','Segoe UI',system-ui,sans-serif;}
+/* month names sit on their own row, anchored over the first day of that month */
+.tlmonths{position:relative; height:15px; margin-bottom:2px;}
+.tlmonths .tk-mon{position:absolute; top:0; transform:translateX(-50%);
+  font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:11.5px; font-weight:600;
+  line-height:1; color:var(--ink); white-space:nowrap;}
+/* the day number is centred over its own mark */
+.tlticks .tk-lab{font-size:11.5px; line-height:1; color:#45535F; white-space:nowrap;}
+.tlticks .tk-mark{width:1px; height:9px; background:#C9D2DC;}
+.tlticks .tick:hover .tk-lab{color:var(--brand-blue);}
+.tlticks .tick.on .tk-lab{color:var(--brand-blue); font-weight:600;}
+.tlticks .tick.on .tk-mark{background:var(--brand-blue); height:13px; width:2px;}
+/* a caret under the baseline marks the day the map is showing */
+.tlticks .tick.on::after{content:""; position:absolute; left:50%; bottom:-6px; width:9px; height:9px;
+  transform:translateX(-50%) rotate(45deg); background:var(--brand-blue); border-radius:2px;}
 /* the slider's right edge lands exactly on the map card's edge */
-.tlbar{margin-left:auto; margin-right:0; min-width:250px; flex:0 1 330px;}
-.tlbar .tl-top{display:flex; align-items:center; gap:9px; margin-bottom:6px;}
+/* in the filter row the timeline sits at the right; inside the map it spans the card */
+.tl-slot{margin-left:auto; margin-right:0; min-width:250px; flex:0 1 330px;}
+.tl-slot .tlbar{width:100%;}
+/* the ruler gets its own strip under the map, so nothing is drawn over Antarctica */
+/* an opaque band so the ruler reads over open water; JS parks it just above Antarctica */
+.tl-strip{position:absolute; left:0; right:0; bottom:0; padding:10px 24px 6px; background:#fff;}
+.tlbar .tl-top{display:flex; align-items:center; gap:9px; margin-bottom:6px; padding-left:12px;}
 .tlbar .tl-span,.tlbar .tl-lab{font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:12px; font-weight:400;
   letter-spacing:.04em; text-transform:uppercase; color:var(--ink); white-space:nowrap;}
 /* the covered range on the left, the window's name on the right, next to play */
@@ -141,35 +199,129 @@ input.tlrange{width:100%; accent-color:var(--accent); margin:0; height:18px; cur
 
 /* CDN rail */
 .chips{display:flex; flex-direction:column; gap:2px;}
-.chip{border:1.5px solid transparent; background:#fff; border-radius:10px; padding:7px 8px; cursor:pointer; font-size:14px; font-family:inherit; color:var(--ink); display:flex; align-items:center; gap:13px; transition:background .12s, border-color .12s; width:100%; text-align:left;}
+.chip{border:1.5px solid transparent; background:#fff; border-radius:4px; padding:8px; cursor:pointer; font-size:14px; font-family:inherit; color:var(--ink); display:flex; align-items:center; gap:13px; transition:background .12s, border-color .12s; width:100%; text-align:left; overflow:hidden;}
+/* names stay on one line and clip as the rail narrows — wrapping mid-fold made the rows
+   jump to two lines for the length of the animation */
+.chip .c-name{white-space:nowrap;}
+.rail-head{flex-wrap:nowrap;}
+.rail-head .rail-div{overflow:hidden;}
 .chip:hover{background:#f4f8ff;}
+/* map-colour key: a short bar at the right end of the row */
+.chip .swatch{width:28px; height:6px; border-radius:3px; flex:0 0 auto; margin-left:auto;}
+.chips.no-key .swatch{display:none;}
+.best-chip .swatch{display:none;}
 .chip .logo{width:32px; height:32px; border-radius:4px; display:block; flex:0 0 auto;}
 .chip .logo-fb{width:32px; height:32px; border-radius:4px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px;}
 .chip .dot{width:10px; height:10px; border-radius:50%; background:#c9d4e0; flex:0 0 auto;}
-.chip.on{border-color:transparent; background:#f2f7ff; font-weight:600;}
+.chip.on{border-color:transparent; background:#E6F0FF; font-weight:600;}
 .chip .cms{margin-left:auto; font-size:11.5px; color:var(--grey); font-weight:500;}
 .chip.on .cms{color:var(--accent);}
 /* best-CDN-per-region reads as a radio option, now the first row inside the CDN rail list */
 /* it reads as the first entry of the CDN list, matching the other rows' metrics */
-.best-chip{width:100%; flex:0 0 auto; background:#fff; border:1.5px solid transparent; border-radius:10px;
-  padding:7px 8px; margin:0 0 2px; font-family:'Rubik','Segoe UI',system-ui,sans-serif;
+.best-chip{width:100%; flex:0 0 auto; background:#fff; border:1.5px solid transparent; border-radius:4px;
+  padding:8px; margin:0 0 2px; font-family:'Rubik','Segoe UI',system-ui,sans-serif;
   font-size:14px; font-weight:500; gap:13px;}
 .best-chip:hover{background:#f4f8ff;}
-/* radio glyph is Assets/radio icon.svg itself (an <img>, so it also renders when the
-   page is opened straight off disk), greyed out while the option is not selected */
-.best-chip .radio{width:22px; height:22px; display:block; flex:0 0 auto; margin:5px;}
-.best-chip:not(.on) .radio{filter:grayscale(1) opacity(.55);}
+/* the Best row carries Assets/Best.svg, at the same 32px as every CDN logo beside it */
+.best-chip .best-ico{width:32px; height:32px; display:block; flex:0 0 auto; border-radius:4px;}
 .best-chip.on{color:var(--brand-blue); background:#E6F0FF; font-weight:500;}
-.rail-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:20px;}
-.rail-head .rail-div{font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:14px; color:var(--ink); font-weight:400;}
-/* multi-CDN / single-CDN mode switch — Assets/toggle icon.svg, 32x18 */
-.switch{position:relative; width:32px; height:18px; flex:0 0 auto; cursor:pointer; display:block;}
+/* min-width:0 lets the row shrink with the rail instead of its contents pushing past the
+   card's edge while the fold animates */
+.rail-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;
+  min-width:0;}
+/* the list folds away so the map can have the full window when it is not needed.
+   Assets/Double Arrows.svg points left to collapse and is flipped to point right to open */
+/* the control is always on show, in both states */
+.rail-fold{flex:0 0 auto; width:32px; height:32px; border:none; background:none; padding:0; cursor:pointer;
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  transition:background .15s ease;}
+.rail-fold:hover{background:#EDEEEE;}
+/* the arrows are Assets/Double Arrows.svg, inlined: a CSS mask pointing at the file is
+   blocked when the page is opened straight off disk, which left the button empty */
+.rail-fold .ic{width:20px; height:20px; display:block; color:#5A697A; transition:transform .18s;}
+.rail-fold .ic svg{width:20px; height:20px; display:block;}
+
+/* collapsed: the rail folds sideways into a slim icon column, handing its width to the map.
+   The asset points left, so it is flipped while the list is open: arrows point right to
+   close it and left to open it again */
+.rail-fold[aria-expanded="true"] .ic{transform:rotate(180deg);}
+/* the fold width lives on <body> so everything measuring against the rail — the grid and
+   the filter row above it — narrows and widens together */
+body{transition:--rail-w .4s cubic-bezier(.4,0,.2,1);}
+body.rail-folded{--rail-w:112px;}
+body:not(.rail-folded){--rail-w:250px;}
+.side>.fgroup.folded{padding:14px 8px 10px; align-items:center; height:auto;}
+/* chevron on top, then the switch, then the shortened title — the head reads downwards */
+.side>.fgroup.folded .rail-head{margin-bottom:14px; flex-direction:column; align-items:center;
+  justify-content:flex-start; gap:12px; width:100%;}
+/* the switch, the title and the note all share one centre line down the narrow card */
+.side>.fgroup.folded .switch,
+.side>.fgroup.folded .rail-title,
+.side>.fgroup.folded .info-wrap,
+.side>.fgroup.folded .rail-fold{align-self:center; margin-left:0; margin-right:0;}
+.side>.fgroup.folded .rail-fold{order:1;}
+.side>.fgroup.folded .switch{order:2;}
+.side>.fgroup.folded .rail-title{order:3;}
+.side>.fgroup.folded .rail-div{flex:0 0 auto;}
+.side>.fgroup.folded .rail-div{white-space:normal; text-align:center; font-size:13px; line-height:1.25;}
+/* the rows keep their logos and drop everything else */
+.chip{will-change:transform;}
+.chip .c-name,.chip .swatch{transition:opacity .22s ease, transform .4s cubic-bezier(.4,0,.2,1);}
+.side>.fgroup.folded .c-name{opacity:0; transform:translateX(-10px);}
+/* folded, the logo sits dead centre in the card and its map-colour dot is taken out of the
+   flow, so the dot cannot push the icon off that centre line */
+/* the card centres its children when folded, which left the list shrink-wrapped to the
+   logos — the rows have to span the card for the dot to sit against its right edge */
+.side>.fgroup.folded .rail-body,
+.side>.fgroup.folded .chips{align-self:stretch; width:100%;}
+.side>.fgroup.folded .chip{position:relative; justify-content:center; gap:0; padding:8px;}
+.side>.fgroup.folded .c-name{display:none;}
+.side>.fgroup.folded .swatch{position:absolute; right:10px; top:50%; margin:0;
+  width:8px; height:8px; border-radius:50%; opacity:1;
+  transform:translateY(-50%); animation:dotIn .22s cubic-bezier(.4,0,.2,1) both;}
+/* the icons and their dots settle in rather than snapping into place */
+@keyframes dotIn{from{opacity:0; transform:translateY(-50%) scale(.3);}
+                 to{opacity:1; transform:translateY(-50%) scale(1);}}
+@keyframes iconIn{from{opacity:.35; transform:scale(.82);} to{opacity:1; transform:scale(1);}}
+.side>.fgroup.folded .chip .logo,
+.side>.fgroup.folded .chip .logo-fb,
+.side>.fgroup.folded .best-chip .best-ico{animation:iconIn .26s cubic-bezier(.4,0,.2,1) both;}
+.side>.fgroup.folded .best-chip{padding:8px; margin-bottom:6px;}
+.rail-body{display:flex; flex-direction:column; min-height:0; flex:0 1 auto;}
+/* the note sits with the title, and goes with it when the rail folds */
+/* title and note ride together, so the note keeps its place when the rail folds */
+/* no overflow clipping here: the info tooltip lives inside this group, and clipping the
+   group hid it entirely — the label truncates on its own instead */
+.rail-title{display:flex; align-items:center; gap:8px; min-width:0; margin-right:auto;}
+.info-wrap{position:relative; display:flex; align-items:center; flex:0 0 auto;
+  cursor:default; outline:none;}
+.rail-info{width:18px; height:18px; display:block;}
+/* the narrow card keeps the title and its note on one line */
+.side>.fgroup.folded .rail-title{margin:0; flex-direction:row; align-items:center; gap:6px;}
+.side>.fgroup.folded .rail-div{white-space:nowrap; overflow:visible; text-align:center;
+  font-size:12.5px; line-height:1.25; max-width:none;}
+.side>.fgroup.folded .rail-info{width:16px; height:16px;}
+/* the explanation hangs under the icon, on a card with a caret pointing back up at it */
+.info-pop{position:absolute; z-index:200; top:calc(100% + 12px); right:-46px; width:264px;
+  background:#fff; border:1px solid #DCDCDC; border-radius:12px; box-shadow:0 12px 30px rgba(16,32,54,.18);
+  padding:8px 10px; font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:12px;
+  font-weight:400; line-height:1.5; color:#5A697A; text-align:left;
+  opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .15s ease, transform .15s ease;}
+.info-pop::before{content:""; position:absolute; top:-8px; right:52px; width:14px; height:14px;
+  background:#fff; border-left:1px solid #DCDCDC; border-top:1px solid #DCDCDC; border-radius:3px 0 0 0;
+  transform:rotate(45deg);}
+.info-wrap:hover .info-pop,
+.info-wrap:focus-visible .info-pop{opacity:1; visibility:visible; transform:translateY(0);}
+.rail-head .rail-div{flex:0 1 auto; min-width:0; overflow:hidden; font-family:'Rubik','Segoe UI',system-ui,sans-serif;
+  font-size:14px; color:var(--ink); font-weight:400; white-space:nowrap; text-overflow:ellipsis;}
+/* multi-CDN / single-CDN mode switch */
+.switch{position:relative; margin-left:8px; width:32px; height:18px; flex:0 0 auto; cursor:pointer; display:block;}
 .switch input{position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:2;}
-.switch .track{position:absolute; inset:0; border-radius:9px;
-  background:url("Assets/toggle%20icon.svg") center/32px 18px no-repeat;}
-.switch .knob{display:none; position:absolute; top:2px; left:16px; width:14px; height:14px; border-radius:50%; background:#fff;}
+.switch .track{position:absolute; inset:0; border-radius:9px; background:#A8AEB5; transition:background .18s ease;}
+.switch .knob{position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff;
+  transition:transform .18s ease;}
 .switch input:checked~.track{background:var(--brand-blue);}
-.switch input:checked~.knob{display:block;}
+.switch input:checked~.knob{transform:translateX(14px);}
 
 /* blend score box */
 .blend{background:linear-gradient(180deg,#f4f9f5,#eef6f0); border:1px solid #d5e8db; border-radius:10px; padding:11px 12px; margin-bottom:11px;}
@@ -213,22 +365,19 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .bgland{fill:#e3eaf2; stroke:#fff; stroke-width:.4; vector-effect:non-scaling-stroke; pointer-events:none;}
 .nodata{fill:#e3eaf2; stroke:#fff; stroke-width:.4; vector-effect:non-scaling-stroke;}
 
-/* horizontal red-yellow-green scale — floats over the map's bottom edge, just above
-   Antarctica, so it reads with the map instead of taking a band of its own */
-/* the scale floats over the map's southern band — it sits on top of Antarctica,
-   which carries no data, instead of taking a strip of its own under the map */
-.relscale{position:absolute; left:0; right:0; bottom:24px; margin:0; padding:12px 24px 14px;
-  background:#fff; border-top:none; pointer-events:none;}
+/* the latency scale stands on end, down the map's left edge inside the frame, which
+   leaves the southern band free for the timeline */
+.relscale{position:absolute; left:12px; top:50%; transform:translateY(-50%); margin:0;
+  padding:12px 10px; background:rgba(255,255,255,.92); border-radius:10px; pointer-events:none;}
 .rs-title{font-size:12px; color:var(--ink2); font-weight:600; line-height:1.45; margin-bottom:9px;}
-.rs-body{width:100%;}
-.rs-bar{height:14px; border-radius:7px;}
-.rs-ticks{display:flex; justify-content:space-between; margin-top:6px; font-size:11.5px; color:var(--ink2);}
-.rs-ticks span{line-height:1; white-space:nowrap;}
-.rs-ticks span:first-child{margin-left:-2px;}
-.rs-ticks span:last-child{margin-right:-2px;}
-/* four bands: each label sits under the middle of its own quarter */
-.rs-ticks-4{justify-content:flex-start;}
-.rs-ticks-4 span{flex:1 1 25%; margin:0; text-align:center;}
+/* the numbers read down the left of the bar, and the bar itself runs taller */
+.rs-body{display:flex; flex-direction:row-reverse; align-items:stretch; gap:10px; height:400px;}
+.rs-bar{width:12px; border-radius:6px;}
+.rs-ticks{display:flex; flex-direction:column; justify-content:space-between; text-align:right;
+  font-size:11px; font-weight:400; color:var(--ink2);}
+.rs-ticks span{line-height:1; white-space:nowrap; font-size:11px; font-weight:400;}
+/* the four hard bands each label the middle of their own quarter of the bar */
+.rs-ticks-4 span{flex:1 1 25%; display:flex; align-items:center;}
 .rs-ticks b{color:var(--ink); font-weight:600;}
 
 /* compact CDN chips inside the map frame */
@@ -242,7 +391,8 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .mini-badge{background:var(--good); color:#fff; font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:8px; letter-spacing:.04em;}
 
 /* map annotation tooltip — white card, one row per CDN, value right-aligned */
-.tooltip{position:fixed; pointer-events:none; z-index:50; display:none; box-sizing:border-box;
+/* above the sticky filter row and the CDN rail, both of which sit in their own layers */
+.tooltip{position:fixed; pointer-events:none; z-index:300; display:none; box-sizing:border-box;
   width:212px; padding:8px; background:#fff; border:1px solid #D3E1FE; border-radius:4px;
   box-shadow:0 4px 16px rgba(1,7,44,.2); font-family:'Rubik','Segoe UI',system-ui,sans-serif;}
 .tooltip .tt-in{display:flex; flex-direction:column; gap:8px; width:100%;}
@@ -256,7 +406,7 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
   font-size:12px; line-height:140%; letter-spacing:-.02em; color:#5A697A;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .tooltip .tt-dot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
-.tooltip .tt-v{flex:0 0 auto; font-size:12px; line-height:12px; letter-spacing:.04em; color:#000; text-align:right;}
+.tooltip .tt-v{flex:0 0 auto; font-size:12px; line-height:12px; letter-spacing:.04em; color:#1D252F; text-align:right;}
 .tooltip .tt-v.diff{color:#D13333;}
 .tooltip .tt-v.par{color:var(--rel-good);}
 .tooltip .tt-note{font-size:11px; line-height:1.35; letter-spacing:-.02em; color:#8b98a8;}
@@ -264,15 +414,17 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 /* comparison table — flat card, one grid row per CDN */
 .ctable{box-sizing:border-box; display:flex; flex-direction:column; align-items:stretch;
   background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden;}
-.ct-row{display:grid; grid-template-columns:194px 194px 1fr 1fr; column-gap:60px; align-items:center;
-  padding:12px 32px; font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:16px; font-weight:400;
+/* four equal columns: the first two were fixed at 194px while the last two took the rest,
+   so the space after Median read much wider than the space after CDN */
+.ct-row{display:grid; grid-template-columns:repeat(4,1fr); column-gap:60px; align-items:center;
+  padding:8px 32px; font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:16px; font-weight:400;
   line-height:140%; letter-spacing:-.02em; color:#1D252F; border-top:1px solid #F0F3F8;}
-.ct-head{display:grid; grid-template-columns:194px 194px 1fr 1fr; column-gap:60px; align-items:center;
+.ct-head{display:grid; grid-template-columns:repeat(4,1fr); column-gap:60px; align-items:center;
   padding:12px 32px; background:#E8EBFC; border-top:none;
   font-family:'Rubik','Segoe UI',system-ui,sans-serif; font-size:16px; font-weight:400;
   line-height:140%; letter-spacing:-.02em; color:#1D252F;}
 .ct-row:first-of-type{border-top:none;}
-.ct-cdn{display:flex; align-items:center; gap:12px; font-size:14px; line-height:140%; color:#000;}
+.ct-cdn{display:flex; align-items:center; gap:12px; font-size:14px; line-height:140%; color:#1D252F;}
 .ct-cdn .logo,.ct-cdn .logo-fb{width:32px; height:32px; border-radius:4px; flex:0 0 auto;}
 /* performance is a band pill, not a bar — same 30/60/90ms cutoffs as before */
 .ct-pill{box-sizing:border-box; display:flex; justify-content:center; align-items:center; padding:4px;
@@ -281,7 +433,6 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .ct-row>span{white-space:nowrap;}
 .ct-row.sel-row{background:#f5f9ff;}
 .ct-row.blend-row{background:#eef6f0; font-weight:500;}
-.ct-title{font-size:22px; color:#0b0f19; margin-bottom:16px;}
 .tbl-toggle{background:none; border:none; color:var(--accent); font-size:13px; cursor:pointer; font-family:inherit; font-weight:600; text-decoration:underline; padding:10px 0 0;}
 
 /* profile */
@@ -299,11 +450,16 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 .gradbar .g{width:140px; height:10px; border-radius:5px;}
 .note{font-size:12px; color:var(--grey); line-height:1.5;}
 
-footer.site{border-top:none; background:transparent; padding:0 0 24px; color:var(--grey); font-size:12.5px; line-height:1.5;}
+/* the source note sits under the map, inside the map column, so the page ends level with
+   the CDN rail beside it instead of running past the bottom of the card */
+.srcnote{grid-column:1; grid-row:4; min-width:0; margin:0; padding:16px 0 0;
+  color:var(--grey); font-size:12.5px; line-height:1.5; text-align:left;}
 @media (max-width:1000px){
   .wrap{padding:0 20px;}
   .layout{grid-template-columns:1fr; padding-left:20px; padding-right:20px;}
-  .layout>.filterbar,#content,#rail,#below{grid-column:1; grid-row:auto;}
+  #content,#rail,#below,.srcnote{grid-column:1; grid-row:auto;}
+  .filterwrap{padding:0 20px;}
+  .filterwrap .filterbar{width:100%;}
   #content .mapcard{margin-bottom:18px;}
   .tlbar{margin-left:0; margin-right:0; flex:1 1 100%;}
   .best-chip{width:100%; flex:1 1 100%;}
@@ -333,7 +489,7 @@ footer.site{border-top:none; background:transparent; padding:0 0 24px; color:var
   <div class="subtitle">Find the fastest and most reliable CDN around the world</div>
 </div></header>
 
-<main class="wrap layout">
+<div class="filterwrap">
   <div class="filterbar">
     <details class="dd" id="advBox">
       <summary>Absolute Latency</summary>
@@ -356,39 +512,52 @@ footer.site{border-top:none; background:transparent; padding:0 0 24px; color:var
     <details class="dd" id="ddScope"></details>
     <details class="dd" id="ddObj"></details>
 
-    <div class="tlbar">
-      <div class="tl-top">
-        <span class="tl-span" id="tlSpan"></span>
-        <span class="tl-lab">Last 10 days</span>
-        <button class="playbtn" id="playBtn" title="Play the last 10 days"><img src="Assets/play%20icon.svg" alt="" width="20" height="20"></button>
-      </div>
-      <input type="range" class="tlrange" id="tlRange" min="0" max="29" step="1">
+    <div class="tl-slot" id="tlSlot"></div>
+
+    <div class="viewseg" id="viewSeg">
+      <button data-v="map" title="Map view" aria-label="Map view"><img class="ic-map" src="Assets/Map.svg" alt="" width="20" height="18"></button>
+      <button data-v="table" title="Table view" aria-label="Table view"><img class="ic-table" src="Assets/Table.svg" alt="" width="19" height="17"></button>
     </div>
   </div>
+</div>
 
+<main class="wrap layout">
   <div id="content"></div>
   <aside class="side" id="rail">
     <div class="fgroup">
       <div class="rail-head">
-        <span class="rail-div" id="railDiv">Build your own Multi-CDN</span>
         <label class="switch" title="Multi-CDN / single CDN">
           <input type="checkbox" id="modeSwitch"><span class="track"></span><span class="knob"></span>
         </label>
+        <span class="rail-title">
+          <span class="rail-div" id="railDiv">Build Multi CDN</span>
+          <span class="info-wrap" tabindex="0" aria-label="What is a Multi-CDN?">
+            <img class="rail-info" src="Assets/Info%20icon.svg" alt="" width="18" height="18">
+            <span class="info-pop" role="tooltip">Combine multiple CDNs to improve performance and
+              reliability across regions.</span>
+          </span>
+        </span>
+        <button class="rail-fold" id="railFold" aria-expanded="true" aria-controls="railBody"
+                title="Collapse the CDN list"><i class="ic"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M9.5 5L4.5 10L9.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M15.5 5L10.5 10L15.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg></i></button>
       </div>
-      <button class="chip best-chip" id="bestChip"><img class="radio" src="Assets/radio%20icon.svg" alt="" width="16" height="16">Best CDN per region</button>
-      <div class="chips" id="chips"></div>
+      <div class="rail-body" id="railBody">
+        <button class="chip best-chip" id="bestChip"><img class="best-ico" src="Assets/Best.svg" alt="" width="32" height="32"><span class="c-name">Best CDN per region</span></button>
+        <div class="chips" id="chips"></div>
+      </div>
     </div>
   </aside>
   <div id="below">
     <section id="profile"></section>
     <div id="tableArea"></div>
   </div>
+  <p class="srcnote">Data is measured using NS1 Pulser’s Real User Monitoring (RUM) community data,
+    aggregated from NS1 Connect partners, with performance measured for small (43&nbsp;bytes) and
+    large (130,098&nbsp;bytes) objects using a single API request for the P50 latency across all
+    samples collected on the same day, by country or US state.</p>
 </main>
-
-<footer class="site"><div class="wrap">
-  Data is measured using NS1 Pulsar RUM Community Data, based on P50 latency from same-day real-user
-  samples in each country or U.S. state, using small (43&nbsp;B) and large (130,098&nbsp;B) objects.
-</div></footer>
 
 <div class="tooltip" id="tooltip"></div>
 
@@ -431,6 +600,10 @@ function blendLabel(){ return S.sel.length===1?S.sel[0]:BLEND; }
 const PALETTE=["#e03131","#2f9e44","#e8590c","#9c36b5","#f08c00","#c2255c",
                "#099268","#a0522d","#74b816","#e64980","#5c940d","#d9a400"];
 const CDN_COLOR={}; CDNS.forEach((c,i)=>{ CDN_COLOR[c.n]=PALETTE[i%PALETTE.length]; });
+/* providers that carry their own colour rather than the palette's next hue */
+CDN_COLOR["Google"]="#CF6EB4";
+CDN_COLOR["Medianova"]="#8F7762";
+CDN_COLOR["Bunny.net"]="#0D8B98";
 const OTHER_COL="#9aa7b5";
 /* relative-performance scale (share of extra latency vs the fastest CDN in that location) */
 const REL_GOOD="#2f9e44", REL_MID="#e8b33a", REL_BAD="#d64545";
@@ -554,7 +727,7 @@ function dateKey(){ return dayISO(S.dayIdx); }
 
 /* ---------- state ---------- */
 const S={
-  scope:"Global", obj:"Small",
+  scope:"Global", obj:"Small", view:"map", railOpen:true,
   dayIdx:DAYS_N-1, playTimer:null,
   sel:[],                       /* the CDNs in your multi-CDN, in the order added */
   mode:"single",                /* "multi" = additive selection, "single" = one CDN at a time */
@@ -601,11 +774,28 @@ function med(a){ if(!a.length) return 0; const s=[...a].sort((x,y)=>x-y),m=s.len
 /* every location has an inherent latency floor; CDNs deviate from it by how strong
    they are in that region, so providers sit close together rather than 3x apart */
 function locBase(u){ return 12+22*hash("loc"+u.id); }
+/* countries where a provider has been given a clear local edge, so it wins the map there */
+/* Countries where a provider is deliberately the strongest, so the map shows its colour
+   there. Kept to a short hand-picked list: the rest of the map is decided by the regional
+   profiles and the daily draw. */
+const HOME={
+  "Fastly":["CN","SA","LY","NA"],
+  "Tata":["IN"],
+  "CDNetworks":["KR","SG"],
+  "Medianova":["TR","AZ"],
+  "Akamai":["JP","DE"],
+  "GCore":["KZ","AT"],
+  "Bunny.net":["SI","HR"],
+  "CDN77":["CZ","SK"]
+};
+function isHome(cdn,id){ return !!HOME[cdn] && HOME[cdn].includes(id); }
 function rawLat(cdn,u,day){
   const prof=CDNS.find(c=>c.n===cdn);
-  let v=locBase(u)*(1+(prof.m[u.macro]-1)*0.55);
-  v*=0.94+0.12*hash(cdn+"@"+u.id);      /* local quirks of that CDN's footprint */
-  v*=1+0.20*(hash(cdn+u.id+day)-0.5);   /* per-location daily swing — flips winners day to day */
+  let v=locBase(u)*(1+(prof.m[u.macro]-1)*1.15);
+  v*=0.72+0.58*hash(cdn+"@"+u.id);      /* local quirks of that CDN's footprint */
+  /* per-location daily swing — wide enough that close races actually change hands as the
+     timeline is scrubbed, instead of the same provider holding a country for all 30 days */
+  v*=1+0.34*(hash(cdn+u.id+day)-0.5);
   v*=1+0.13*(hash(cdn+day)-0.5);        /* a CDN can simply have a bad day network-wide */
   return v;
 }
@@ -621,11 +811,22 @@ const CAL={};
     base[n]=med(all);
   });
   const target=med(CDN_NAMES.map(n=>base[n]));
-  CDN_NAMES.forEach(n=>{ CAL[n]=(target/base[n])*(0.60+1.20*hash("q"+n)); });
+  /* the residual spread is kept narrow: a wide one lets the two cheapest providers win
+     every country, and the map collapses to two colours instead of showing who is
+     actually strongest where */
+  /* Providers are levelled, then spread again on purpose: without a spread every CDN lands
+     in the same 20ms band and the table reads "Excellent" all the way down. The spread is
+     kept mild enough that regional strength still decides who wins each country. */
+  const QUALITY=[0.92,0.96,1.00,1.05,1.12,1.20,1.32,1.48,1.70,1.95,2.25,2.60];
+  CDN_NAMES.map(n=>({n,r:hash("q"+n)})).sort((a,b)=>a.r-b.r)
+    .forEach((x,i)=>{ CAL[x.n]=(target/base[x.n])*QUALITY[i%QUALITY.length]; });
 })();
 /* latency of one real CDN at one location, on the selected day */
 function unitLatency(cdn,u,day){
   let v=rawLat(cdn,u,day||dateKey())*CAL[cdn];
+  /* the home-country edge is applied after levelling, so it holds however slow the provider
+     is overall — otherwise the bottom of the table never wins a country and drops off the map */
+  if(isHome(cdn,u.id)) v*=0.15;
   if(S.obj==="Large") v=v*2.1*(0.9+0.25*hash(cdn+"L"));
   return v;
 }
@@ -684,12 +885,9 @@ function color(cdn){
 }
 /* best-CDN-per-location view: every location gets its own shade of the winning
    CDN's hue, so neighbouring locations read as distinct while the legend still holds */
-function winnerColor(u){
-  const c=bestAt(u).cdn, base=color(c);
-  const t=hash("shade"+u.id+c);
-  return t<0.5 ? mixHex(base,"#ffffff",0.06+t*0.60)
-               : mixHex(base,"#16202b",(t-0.5)*0.46);
-}
+/* one flat colour per CDN: shading neighbouring countries differently made the same
+   provider look like several, which is the opposite of what this view is for */
+function winnerColor(u){ return color(bestAt(u).cdn); }
 function thrColor(v){ return v<=S.thr.g?"#2da44e": v<=S.thr.y?"#d4a72c": v<=S.thr.o?"#e8793a":"#cf222e"; }
 
 /* ---------- top filter bar controls ---------- */
@@ -707,18 +905,12 @@ function renderControls(){
   dd("ddScope",["Global","US","Europe"],()=>S.scope,v=>S.scope=v);
   dd("ddObj",["Small","Large"],()=>S.obj,v=>S.obj=v,v=>v+" object");
 
-  const r=document.getElementById("tlRange");
-  /* never write back into the slider the user is dragging — it fights the thumb */
-  if(document.activeElement!==r) r.value=S.dayIdx;
-  r.oninput=()=>{ stopPlay(); S.dayIdx=+r.value; scheduleRender(); };
-  /* the header names the whole range the slider covers, e.g. "20 July - 19 Aug" */
-  const span=d=>new Date(d+"T00:00:00Z").toLocaleDateString("en-GB",
-    {day:"numeric",month:"long",timeZone:"UTC"});
-  document.getElementById("tlSpan").textContent=
-    `${span(dayISO(0))} - ${fmtDate(dayISO(DAYS_N-1))}`;
-  const pb=document.getElementById("playBtn");
-  pb.className="playbtn"+(S.playTimer?" on":"");
-  pb.onclick=()=>{ S.playTimer?stopPlay():startPlay(); render(); };
+
+  /* map or table — one at a time, so each gets the full width of the column */
+  document.querySelectorAll("#viewSeg button").forEach(b=>{
+    b.className=b.dataset.v===S.view?"on":"";
+    b.onclick=()=>{ S.view=b.dataset.v; render(); };
+  });
 
   const ac=document.getElementById("absChk");
   ac.checked=S.absMode;
@@ -729,6 +921,99 @@ function renderControls(){
     document.getElementById(id+"v").textContent=S.thr[k]+"ms";
     el.oninput=()=>{ S.thr[k]=+el.value; S.absMode=true; scheduleRender(); };
   });
+}
+
+/* The timeline reads as a row of day ticks: every day in the range is a segment, and the
+   ones up to the selected day are filled. Rendered by hand rather than as a range input so
+   the ticks are clickable and the fill is exact. */
+function timelineHTML(kind){
+  const span=d=>new Date(d+"T00:00:00Z").toLocaleDateString("en-GB",
+    {day:"numeric",month:"long",timeZone:"UTC"});
+  const head=`<div class="tl-top">
+      <span class="tl-span">${span(dayISO(0))} - ${fmtDate(dayISO(DAYS_N-1))}</span>
+      <span class="tl-lab">Last 10 days</span>
+      <button class="playbtn" title="Play the last 10 days"><img src="Assets/play%20icon.svg" alt="" width="20" height="20"></button>
+    </div>`;
+  /* the table has no map to sit in, so it keeps the original slider */
+  if(kind==="slider")
+    return `<div class="tlbar">${head}
+      <input type="range" class="tlrange" min="0" max="${DAYS_N-1}" step="1" value="${S.dayIdx}">
+    </div>`;
+  let ticks="", months="";
+  for(let i=0;i<DAYS_N;i++){
+    const iso=dayISO(i), d=new Date(iso+"T00:00:00Z");
+    const dd=String(d.getUTCDate()).padStart(2,"0");
+    /* the month is named once, where it starts, on a row of its own above the numbers */
+    if(i===0||d.getUTCDate()===1)
+      months+=`<span class="tk-mon" style="left:${((i+0.5)/DAYS_N*100).toFixed(3)}%">${
+        d.toLocaleDateString("en-GB",{month:"short",timeZone:"UTC"})}</span>`;
+    ticks+=`<button class="tick${i===S.dayIdx?" on":""}" data-d="${i}"
+      title="${fmtDate(iso)}" aria-label="${fmtDate(iso)}">
+      <span class="tk-lab">${dd}</span><span class="tk-mark"></span></button>`;
+  }
+  return `<div class="tlbar">${head}
+    <div class="tlmonths">${months}</div>
+    <div class="tlticks">${ticks}</div>
+  </div>`;
+}
+
+/* The timeline lives inside the map frame in map view and in the filter row otherwise, so
+   it is wired after the views are drawn, against whichever copy is on the page. */
+function wireTimeline(){
+  document.querySelectorAll(".tlticks .tick").forEach(t=>{
+    t.onclick=()=>{ stopPlay(); S.dayIdx=+t.dataset.d; render(); };
+  });
+  /* the marker is draggable: hold anywhere on the ruler and scrub across the days.
+     The day is read off the pointer's position rather than off the tick under it, so the
+     drag keeps up even when the pointer runs past either end of the ruler. */
+  const slider=document.querySelector("input.tlrange");
+  if(slider){
+    /* never write back into the slider the user is dragging — it fights the thumb */
+    if(document.activeElement!==slider) slider.value=S.dayIdx;
+    slider.oninput=()=>{ stopPlay(); S.dayIdx=+slider.value; scheduleRender(); };
+  }
+
+  const ruler=document.querySelector(".tlticks");
+  if(ruler){
+    /* every render replaces the ruler node, so measure whichever one is on the page now —
+       measuring the captured (detached) node would return zeros and break the scrub */
+    const dayAt=e=>{
+      const live=document.querySelector(".tlticks")||ruler;
+      const r=live.getBoundingClientRect();
+      if(!r.width) return S.dayIdx;
+      const f=(e.clientX-r.left)/r.width;
+      return Math.max(0,Math.min(DAYS_N-1,Math.round(f*(DAYS_N-1))));
+    };
+    let dragging=false;
+    const move=e=>{
+      if(!dragging) return;
+      const d=dayAt(e);
+      if(d!==S.dayIdx){ S.dayIdx=d; scheduleRender(); }
+    };
+    const stop=()=>{
+      if(!dragging) return;
+      dragging=false;
+      removeEventListener("pointermove",move);
+      removeEventListener("pointerup",stop);
+      removeEventListener("pointercancel",stop);
+    };
+    ruler.onpointerdown=e=>{
+      if(e.button) return;
+      stopPlay();
+      dragging=true;
+      /* the listeners live on the window so the scrub survives leaving the ruler */
+      addEventListener("pointermove",move);
+      addEventListener("pointerup",stop);
+      addEventListener("pointercancel",stop);
+      S.dayIdx=dayAt(e); scheduleRender();
+      e.preventDefault();
+    };
+  }
+
+  const pb=document.querySelector(".playbtn");
+  if(!pb) return;
+  pb.className="playbtn"+(S.playTimer?" on":"");
+  pb.onclick=()=>{ S.playTimer?stopPlay():startPlay(); render(); };
 }
 
 /* play scrubs the most recent 10 days of the 30-day range, earliest to latest */
@@ -743,8 +1028,9 @@ function startPlay(){
 function stopPlay(){ if(S.playTimer){ clearInterval(S.playTimer); S.playTimer=null; } }
 
 /* ---------- right rail: build your multi-CDN ---------- */
-/* the CDN rows keep the position they are first given, so the list never reshuffles */
-let RAIL_ORDER=[];
+/* the rail's running order, fixed by design rather than by the day's ranking */
+const RAIL_ORDER=["Fastly","CloudFront","Google","IO River VCDN","Tata","Cloudflare",
+                  "GCore","Bunny.net","Akamai","CacheFly","CDN77","CDNetworks","Medianova"];
 function renderRail(){
   /* Multi-CDN vs Single CDN selection mode — switch on = build a multi-CDN */
   const sw=document.getElementById("modeSwitch");
@@ -759,8 +1045,50 @@ function renderRail(){
     S.profileCDN=null;
     render();
   };
-  /* the card keeps one heading in both modes — the switch itself shows the mode */
-  document.getElementById("railDiv").textContent="Build your own Multi-CDN";
+  /* the card keeps one heading in both modes — the switch itself shows the mode.
+     Folded, the rail is too narrow for the full sentence, so it shortens. */
+  const railDiv=document.getElementById("railDiv");
+
+  const fold=document.getElementById("railFold");
+  const body=document.getElementById("railBody");
+  const card=document.querySelector("#rail .fgroup");
+  const layout=document.querySelector("main.layout");
+  /* the card's narrow layout — the stacked head, the short title, the centred rows */
+  const paintCard=()=>{
+    card.classList.toggle("folded",!S.railOpen);
+    railDiv.textContent=S.railOpen?"Build Multi CDN":"Multi CDN";
+  };
+  const paint=()=>{
+    fold.setAttribute("aria-expanded",String(S.railOpen));
+    fold.title=S.railOpen?"Collapse the CDN list":"Expand the CDN list";
+    /* folded keeps the list, just as a column of logos */
+    body.style.display="";
+    paintCard();
+    document.body.classList.toggle("rail-folded",!S.railOpen);
+  };
+  paint();
+  /* The column slides in CSS. Refitting the map on every frame of that slide meant a full
+     measure-and-reflow per frame, which is what made it stutter — the frame carries its own
+     aspect ratio, so the drawing scales with it on its own, and one refit at the end is
+     enough to settle the regional scopes whose frame height is fixed. */
+  fold.onclick=()=>{
+    S.railOpen=!S.railOpen;
+    fold.setAttribute("aria-expanded",String(S.railOpen));
+    fold.title=S.railOpen?"Collapse the CDN list":"Expand the CDN list";
+    /* Expanding, the card must be in its wide layout before the column grows into it.
+       Collapsing, the reverse: switching the card to its narrow layout up front made the
+       head restack and the title change while the column was still full width, which read
+       as a jump. So the card's layout swap waits for the slide to finish. */
+    document.body.classList.toggle("rail-folded",!S.railOpen);
+    if(S.railOpen) paintCard();
+    const done=()=>{
+      if(!S.railOpen) paintCard();
+      fitMapToBox();
+      placeTimeline();
+    };
+    document.body.addEventListener("transitionend",done,{once:true});
+    setTimeout(done,460);   /* belt and braces if the transition never fires */
+  };
 
   const bc=document.getElementById("bestChip");
   bc.className="chip best-chip"+(S.sel.length?"":" on");
@@ -771,17 +1099,24 @@ function renderRail(){
   bc.onclick=()=>{ S.sel=[]; S.profileCDN=null; render(); };
 
   const el=document.getElementById("chips"); el.innerHTML="";
-  /* IO River VCDN sits in the same list as every other CDN — no special placement.
-     The order is settled once, on the first render, and then held: ranking it on every
-     render made rows jump around under the cursor whenever the day changed. */
-  if(!RAIL_ORDER.length)
-    RAIL_ORDER=[...CDN_NAMES,VCDN].map(n=>({n,v:medLat(n)})).sort((a,b)=>a.v-b.v).map(x=>x.n);
-  RAIL_ORDER.forEach(name=>{
+  /* the colour bars are the map's key, and the map only paints per-CDN colours in the
+     best-CDN-per-region view. Once a CDN is picked — or the rail switches to building a
+     multi-CDN, where the list is a set of picks rather than a legend — the key has nothing
+     left to explain and comes off. */
+  el.classList.toggle("no-key",S.sel.length>0||S.mode==="multi");
+  /* IO River VCDN sits in the same list as every other CDN — no special placement. The
+     order is the fixed one above, so rows never move as the day or the scope changes;
+     anything added to the data but missing from that list still gets a row, at the end. */
+  const order=RAIL_ORDER.filter(n=>n===VCDN||CDN_NAMES.includes(n))
+    .concat([...CDN_NAMES,VCDN].filter(n=>!RAIL_ORDER.includes(n)));
+  order.forEach(name=>{
     const c={n:name};
     const on=S.sel.includes(c.n);
     const b=document.createElement("button");
     b.className="chip"+(on?" on":"");
-    b.innerHTML=`${logoHTML(c.n)}${c.n}`;
+    /* the bar carries the colour this CDN is painted in on the map, so the rail reads as
+       the map's key */
+    b.innerHTML=`${logoHTML(c.n)}<span class="c-name">${c.n}</span><span class="swatch" style="background:${color(c.n)}"></span>`;
     b.onclick=()=>{
       if(S.mode==="single"){
         S.sel=on?[]:[c.n];
@@ -853,7 +1188,7 @@ function geoSVG(scope,fillFn,tipFn,attrs,bgFillFn){
      muted estimate from the nearest tracked macro-region rather than leaving
      the map looking half-empty — tinted lighter so it still reads as a guess */
   if(g.bg&&Array.isArray(g.bg)) g.bg.forEach((d,i)=>{
-    if(isAntarctica(d)){ t+=`<path class="bgland" d="${d}"></path>`; return; }
+    if(isAntarctica(d)){ t+=`<path class="bgland antarctica" d="${d}"></path>`; return; }
     const macro=blobRegion(d);
     const u={id:"~bg"+i, name:"", macro};
     t+=`<path class="bgland" d="${d}" style="fill:${bgFill(u)}"
@@ -896,8 +1231,9 @@ function mapHTML(){
   /* the scale explains a latency colouring, so it is dropped in the best-CDN-per-region
      view, where the colours stand for which CDN wins rather than how fast it is */
   const scale=S.absMode?thrLegendHTML():S.sel.length?relScaleHTML():"";
+  /* the timeline floats in the map's empty southern water, above Antarctica */
   return `<div class="mapwrap mapfixed">`+geoSVG(S.scope,fill,"mapTip",'id="mapsvg" preserveAspectRatio="none"',fill)
-    +scale+`</div>`;
+    +scale+`<div class="tl-strip">${timelineHTML()}</div></div>`;
 }
 /* tooltip row: colored dot + label on the left, value right-aligned */
 function tipRow(dot,label,value,cls){
@@ -905,28 +1241,29 @@ function tipRow(dot,label,value,cls){
     <span class="tt-v${cls?" "+cls:""}">${value}</span></div>`;
 }
 /* one row per selected CDN, then the gap between your pick and the local winner */
+/* the tooltip's dots read as a verdict rather than as identity: green for the local best,
+   amber for whatever is selected, then green or red on the gap between them */
+const TIP_BEST="#2F9E44", TIP_SEL="#E8B33A", TIP_BAD="#D83232";
 function selRowsHTML(latOf,bestV){
   if(!S.sel.length) return "";
-  const MAX=3;
+  const multi=S.sel.length>1;
   let html="";
-  S.sel.slice(0,MAX).forEach(c=>{
-    html+=tipRow(color(c),`Selected CDN : ${c}`,`${latOf(c).toFixed(2)}ms`);
-  });
-  if(S.sel.length>MAX) html+=tipRow(OTHER_COL,`+${S.sel.length-MAX} more selected`,"");
-  /* with several CDNs picked the blend is what actually gets served, so the gap is measured on it */
-  const v=S.sel.length>1?latOf(BLEND):latOf(S.sel[0]);
-  if(S.sel.length>1) html+=tipRow(VCDN_COL,BLEND,`${v.toFixed(2)}ms`);
+  /* a multi-CDN serves whichever of its members is fastest here, so the members'
+     individual numbers are noise — the blend is the only figure that gets served */
+  if(!multi) html+=tipRow(TIP_SEL,`Selected CDN : ${S.sel[0]}`,`${latOf(S.sel[0]).toFixed(2)}ms`);
+  const v=multi?latOf(BLEND):latOf(S.sel[0]);
+  if(multi) html+=tipRow(TIP_SEL,BLEND,`${v.toFixed(2)}ms`);
   const d=v-bestV;
   html+=d<=0.05
-    ? tipRow(REL_GOOD,"Diff","fastest here","par")
-    : tipRow("#D83232","Diff",`${d.toFixed(1)}ms`,"diff");
+    ? tipRow(TIP_BEST,"Diff","fastest here","par")
+    : tipRow(TIP_BAD,"Diff",`${d.toFixed(1)}ms`,"diff");
   return html;
 }
 /* the annotation: which CDN is fastest right here, and how your picks compare */
 function mapTip(e,code){
   const u=unitById(code); if(!u)return;
   const b=bestAt(u);
-  let html=tipRow(color(b.cdn),`Best CDN : ${b.cdn}`,`${b.v.toFixed(2)}ms`);
+  let html=tipRow(TIP_BEST,`Best CDN : ${b.cdn}`,`${b.v.toFixed(2)}ms`);
   html+=selRowsHTML(ent=>entLat(ent,u),b.v);
   showTip(e,u.name,html);
 }
@@ -938,7 +1275,7 @@ function bgTip(e,macro){
   if(!us.length) return;
   let bc=null,bv=Infinity;
   CDN_NAMES.forEach(c=>{ const v=med(us.map(u=>unitLatency(c,u))); if(v<bv){bv=v;bc=c;} });
-  let html=tipRow(color(bc),`Best CDN : ${bc}`,`${bv.toFixed(2)}ms`);
+  let html=tipRow(TIP_BEST,`Best CDN : ${bc}`,`${bv.toFixed(2)}ms`);
   html+=selRowsHTML(ent=>med(us.map(u=>entLat(ent,u))),bv);
   html+=`<div class="tt-note">Region estimate · no country-level data here</div>`;
   showTip(e,rg?rg.n:macro,html);
@@ -962,10 +1299,9 @@ function relScaleHTML(){
   const [lo,hi]=latDomain();
   const ticks=[0,.25,.5,.75,1].map(f=>{
     const v=Math.round(lo+(hi-lo)*f);
-    return `<span><b>${f===0?"≤ "+v:f===1?v+"+":v} ms</b></span>`;
+    return `<span>${f===0?"≤ "+v:f===1?v+"+":v} ms</span>`;
   }).join("");
   return `<div class="relscale">
-    <div class="rs-title">Latency</div>
     <div class="rs-body">
       <div class="rs-bar" style="background:${latGradientCSS()}"></div>
       <div class="rs-ticks">${ticks}</div>
@@ -978,11 +1314,10 @@ function thrLegendHTML(){
   const c=["#2da44e","#d4a72c","#e8793a","#cf222e"];
   const stops=c.map((col,i)=>`${col} ${i*25}%, ${col} ${(i+1)*25}%`).join(", ");
   const ticks=[`≤ ${S.thr.g} ms`,`≤ ${S.thr.y} ms`,`≤ ${S.thr.o} ms`,`> ${S.thr.o} ms`]
-    .map(t=>`<span><b>${t}</b></span>`).join("");
+    .map(t=>`<span>${t}</span>`).join("");
   return `<div class="relscale">
-    <div class="rs-title">Latency</div>
     <div class="rs-body">
-      <div class="rs-bar" style="background:linear-gradient(90deg, ${stops})"></div>
+      <div class="rs-bar" style="background:linear-gradient(180deg, ${stops})"></div>
       <div class="rs-ticks rs-ticks-4">${ticks}</div>
     </div>
   </div>`;
@@ -1063,7 +1398,7 @@ function latColor(ms){
   return "#"+mix(1)+mix(3)+mix(5);
 }
 function latGradientCSS(){
-  return "linear-gradient(90deg,"+LAT_STOPS.map(s=>s[1]+" "+(s[0]*100).toFixed(0)+"%").join(",")+")";
+  return "linear-gradient(180deg,"+LAT_STOPS.map(s=>s[1]+" "+(s[0]*100).toFixed(0)+"%").join(",")+")";
 }
 function absPerfLabel(ms){ return ms<=30?"Excellent": ms<=60?"Good": ms<=90?"Fair":"Slow"; }
 /* the band reads as a pill: green for Excellent, amber for everything slower */
@@ -1236,23 +1571,33 @@ function fitMapToBox(){
     }
   }
 }
+/* The ruler sits on the floor of the frame and simply covers Antarctica, which carries no
+   data anyway — that keeps it clear of every country that does. */
+function placeTimeline(){
+  const strip=document.querySelector(".mapfixed .tl-strip"); if(!strip) return;
+  strip.style.bottom="16px";
+}
 /* the frame keeps its size on resize, but its proportions change, so refit */
-addEventListener("resize",()=>fitMapToBox());
+addEventListener("resize",()=>{ fitMapToBox(); placeTimeline(); });
 
 /* ---------- main render ---------- */
 function render(){
   renderControls(); renderRail();
+  const mapOn=S.view==="map";
+  document.getElementById("tlSlot").innerHTML=mapOn?"":timelineHTML("slider");
   /* the map card shares row 1 with the CDN rail, so it renders on its own */
-  document.getElementById("content").innerHTML=`
+  const content=document.getElementById("content");
+  content.style.display=mapOn?"":"none";
+  content.innerHTML=mapOn?`
     <section class="mapcard">
       ${mapHTML()}
-    </section>`;
-  fitMapToBox();
-  document.getElementById("tableArea").innerHTML=`
-    <div>
-      <h2 class="ct-title">Comparison Table</h2>
-      ${comparisonTableHTML()}
-    </div>`;
+    </section>`:"";
+  if(mapOn) fitMapToBox();
+  const below=document.getElementById("below");
+  below.style.display=mapOn?"none":"";
+  document.getElementById("tableArea").innerHTML=mapOn?"":comparisonTableHTML();
+  placeTimeline();
+  wireTimeline();
   renderProfile();
 }
 render();
