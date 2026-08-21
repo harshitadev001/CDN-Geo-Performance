@@ -475,7 +475,8 @@ section h2{font-size:18px; color:var(--dark); margin-bottom:4px;}
 <body>
 
 <div class="topbar"><div class="wrap">
-  <a class="brand" href="https://www.ioriver.io" target="_blank" rel="noopener">
+  <!-- the brand mark reloads the page, back to the view it opens on -->
+  <a class="brand" href="" onclick="event.preventDefault();location.reload();" title="Reload CDN Hub">
     <img src="Assets/Logos/Top%20logo.svg" alt="" width="50" height="50">
     <span class="brand-txt">
       <span class="brand-name">CDN <b>Hub.</b></span>
