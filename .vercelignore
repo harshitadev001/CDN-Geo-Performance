@@ -1,0 +1,9 @@
+# a deployment only needs the page and its artwork — everything else here is working
+# material (notes, specs, the old prototype) or local credentials, and a preview URL is
+# public, so none of it should ship
+.env*
+.claude
+*.md
+*.docx
+Site
+cdn-performance-hub-prototype.html
