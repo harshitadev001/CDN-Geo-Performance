@@ -297,10 +297,12 @@ body:not(.rail-folded){--rail-w:250px;}
    logos — the rows have to span the card for the dot to sit against its right edge */
 .side>.fgroup.folded .rail-body,
 .side>.fgroup.folded .chips{align-self:stretch; width:100%;}
-/* the row is a 54px square with its logo centred — no caption to make room for */
+/* the row is a 54px square with its logo centred — no caption to make room for. The colour
+   bar is placed off the row's centre and reaches past the padding box, so the row cannot
+   clip its own contents or the bar loses its right edge. */
 .side>.fgroup.folded .chip{position:relative; flex-direction:column; align-items:center;
   justify-content:center; gap:4px; padding:0; border-radius:4px; width:54px; height:54px;
-  align-self:center;
+  align-self:center; overflow:visible;
   /* the list is a column flexbox that scrolls: without this the rows shrink to fit the
      card's height and the caption is clipped away under the logo */
   flex:0 0 auto;}
