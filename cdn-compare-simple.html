@@ -1005,9 +1005,12 @@ function renderControls(){
    ones up to the selected day are filled. Rendered by hand rather than as a range input so
    the ticks are clickable and the fill is exact. */
 function timelineHTML(kind){
+  /* a shafted arrow rather than a bare chevron — it reads as "go a day back / forward"
+     rather than as a menu affordance */
   const arrow=(d,lab)=>`<button class="stepbtn" data-step="${d}" title="${lab}" aria-label="${lab}">
-      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="${d<0?"M12 4L6 10l6 6":"M8 4l6 6-6 6"}"
-        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="${
+        d<0?"M16 10H4.5M4.5 10l4.5-4.5M4.5 10l4.5 4.5":"M4 10h11.5M15.5 10L11 5.5M15.5 10L11 14.5"}"
+        stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
   const head=`<div class="tl-top">
       <span class="tl-lab">Last 30 days</span>
       <button class="playbtn" title="Play the whole range"><img src="Assets/play%20icon.svg" alt="" width="20" height="20"></button>
