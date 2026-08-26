@@ -309,10 +309,6 @@ body:not(.rail-folded){--rail-w:250px;}
 .side>.fgroup.folded .chips{gap:0;}
 /* folded, the row is its logo alone — the name is shown on hover instead (see railTip) */
 .side>.fgroup.folded .c-name{display:none;}
-/* a hairline between the rows, drawn as a pseudo-element rather than a border so it does
-   not shift the row's box or fight the transparent border the selected state paints */
-.side>.fgroup.folded .chips .chip::before{content:""; position:absolute; left:-4px; right:-4px;
-  top:0; height:1px; background:#E1E2E2;}
 /* the folded rail's row labels: a small card pointing sideways at the row it names. It is
    positioned against the row rather than nested inside it — the list scrolls, and a nested
    card would be clipped by that scroll box. */
